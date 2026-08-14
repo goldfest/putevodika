@@ -12,6 +12,8 @@ import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
 import ru.putevodika.auth.exception.InvalidCredentialsException;
 import ru.putevodika.auth.exception.UserInactiveException;
 import ru.putevodika.user.exception.UserNotFoundException;
+import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
+import ru.putevodika.user.exception.SelfAdministrationException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -157,6 +159,40 @@ public class ApiExceptionHandler {
 
         problemDetail.setTitle(
                 "Пользователь не найден"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(IncorrectCurrentPasswordException.class)
+    public ProblemDetail handleIncorrectCurrentPassword(
+            IncorrectCurrentPasswordException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Не удалось изменить пароль"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(SelfAdministrationException.class)
+    public ProblemDetail handleSelfAdministration(
+            SelfAdministrationException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.CONFLICT,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Недопустимая административная операция"
         );
 
         return problemDetail;

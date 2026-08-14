@@ -8,6 +8,15 @@ import ru.putevodika.user.dto.UserResponse;
 import ru.putevodika.user.entity.UserAccount;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.repository.UserRepository;
+import ru.putevodika.place.repository.CategoryRepository;
+import ru.putevodika.user.dto.UpdatePreferencesRequest;
+import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
+import ru.putevodika.user.dto.UpdateProfileRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.putevodika.user.dto.ChangePasswordRequest;
+import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
+
+import java.util.HashSet;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,19 +28,15 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final CategoryRepository categoryRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
 
     public UserResponse getById(Long id) {
-        UserAccount user =
-                userRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () ->
-                                        new UserNotFoundException(
-                                                id
-                                        )
-                        );
-
-        return toResponse(user);
+        return toResponse(
+                getUser(id)
+        );
     }
 
 
@@ -56,5 +61,101 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional
+    public UserResponse updatePreferences(
+            Long userId,
+            UpdatePreferencesRequest request
+    ) {
+        UserAccount user = getUser(userId);
+
+        Set<String> requestedCodes =
+                request.getCategories();
+
+        Set<Category> categories =
+                requestedCodes.isEmpty()
+                        ? Set.of()
+                        : categoryRepository
+                        .findAllByCodeInAndActiveTrue(
+                                requestedCodes
+                        );
+
+        validateCategories(
+                requestedCodes,
+                categories
+        );
+
+        user.replacePreferredCategories(
+                categories
+        );
+
+        return toResponse(user);
+    }
+
+    private void validateCategories(
+            Set<String> requestedCodes,
+            Set<Category> categories
+    ) {
+        Set<String> existingCodes =
+                categories.stream()
+                        .map(Category::getCode)
+                        .collect(Collectors.toSet());
+
+        Set<String> unknownCodes =
+                new HashSet<>(requestedCodes);
+
+        unknownCodes.removeAll(existingCodes);
+
+        if (!unknownCodes.isEmpty()) {
+            throw new UnknownPreferenceCategoryException(
+                    unknownCodes
+            );
+        }
+    }
+
+    @Transactional
+    public UserResponse updateProfile(
+            Long userId,
+            UpdateProfileRequest request
+    ) {
+        UserAccount user = getUser(userId);
+
+        user.changeDisplayName(
+                request.getDisplayName().trim()
+        );
+
+        return toResponse(user);
+    }
+
+    private UserAccount getUser(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(
+                        () -> new UserNotFoundException(id)
+                );
+    }
+
+    @Transactional
+    public void changePassword(
+            Long userId,
+            ChangePasswordRequest request
+    ) {
+        UserAccount user = getUser(userId);
+
+        if (!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new IncorrectCurrentPasswordException();
+        }
+
+        String newPasswordHash =
+                passwordEncoder.encode(
+                        request.getNewPassword()
+                );
+
+        user.changePasswordHash(
+                newPasswordHash
+        );
     }
 }

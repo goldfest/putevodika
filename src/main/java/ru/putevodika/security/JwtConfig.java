@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -48,7 +50,8 @@ public class JwtConfig {
     @Bean
     public JwtDecoder jwtDecoder(
             SecretKey secretKey,
-            JwtProperties properties
+            JwtProperties properties,
+            JwtAccountValidator accountValidator
     ) {
         NimbusJwtDecoder decoder =
                 NimbusJwtDecoder
@@ -56,9 +59,15 @@ public class JwtConfig {
                         .macAlgorithm(MacAlgorithm.HS256)
                         .build();
 
-        decoder.setJwtValidator(
+        OAuth2TokenValidator<Jwt> defaultValidator =
                 JwtValidators.createDefaultWithIssuer(
                         properties.issuer()
+                );
+
+        decoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(
+                        defaultValidator,
+                        accountValidator
                 )
         );
 

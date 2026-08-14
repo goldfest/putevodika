@@ -142,4 +142,8 @@ public class UserAccount {
     void preUpdate() {
         updatedAt = Instant.now();
     }
+
+    public void changeRole(UserRole role) {
+        this.role = role;
+    }
 }
