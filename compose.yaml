@@ -1,0 +1,32 @@
+services:
+
+  postgres:
+    image: postgis/postgis:18-3.6-alpine
+
+    container_name: putevodika-postgres
+
+    environment:
+      POSTGRES_DB: putevodika
+      POSTGRES_USER: putevodika
+      POSTGRES_PASSWORD: putevodika
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - putevodika-postgres-data:/var/lib/postgresql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U putevodika -d putevodika"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    restart: unless-stopped
+
+volumes:
+  putevodika-postgres-data:
