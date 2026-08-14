@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.putevodika.place.exception.PlaceNotFoundException;
 import ru.putevodika.place.exception.UnknownPlaceCategoryException;
+import ru.putevodika.place.exception.InvalidMapBoundsException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -42,6 +43,23 @@ public class ApiExceptionHandler {
         problemDetail.setProperty(
                 "unknownCategories",
                 exception.getCategoryCodes()
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidMapBoundsException.class)
+    public ProblemDetail handleInvalidMapBounds(
+            InvalidMapBoundsException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Некорректные границы карты"
         );
 
         return problemDetail;

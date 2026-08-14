@@ -13,6 +13,9 @@ import ru.putevodika.place.entity.Place;
 import ru.putevodika.place.entity.PlaceSourceType;
 import ru.putevodika.place.repository.CategoryRepository;
 import ru.putevodika.place.repository.PlaceRepository;
+import ru.putevodika.place.dto.NearbyPlaceResponse;
+import ru.putevodika.place.dto.MapPlaceResponse;
+import ru.putevodika.place.exception.InvalidMapBoundsException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +29,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PlaceService {
+
+    private static final double EARTH_RADIUS_METERS =
+            6_371_008.8;
 
     private final PlaceRepository placeRepository;
 
@@ -105,7 +111,7 @@ public class PlaceService {
                 .build();
     }
 
-    public List<PlaceResponse> findNearby(
+    public List<NearbyPlaceResponse> findNearby(
             double latitude,
             double longitude,
             int radiusMeters,
@@ -120,7 +126,11 @@ public class PlaceService {
                             limit
                     )
                     .stream()
-                    .map(this::toResponse)
+                    .map(place -> toNearbyResponse(
+                            place,
+                            latitude,
+                            longitude
+                    ))
                     .toList();
         }
 
@@ -142,7 +152,11 @@ public class PlaceService {
                         limit
                 )
                 .stream()
-                .map(this::toResponse)
+                .map(place -> toNearbyResponse(
+                        place,
+                        latitude,
+                        longitude
+                ))
                 .toList();
     }
 
@@ -164,5 +178,155 @@ public class PlaceService {
                     unknownCodes
             );
         }
+    }
+
+    private NearbyPlaceResponse toNearbyResponse(
+            Place place,
+            double originLatitude,
+            double originLongitude
+    ) {
+        Set<String> categories =
+                place.getCategories()
+                        .stream()
+                        .map(Category::getCode)
+                        .collect(Collectors.toSet());
+
+        long distanceMeters = calculateDistanceMeters(
+                originLatitude,
+                originLongitude,
+                place.getLocation().getY(),
+                place.getLocation().getX()
+        );
+
+        return NearbyPlaceResponse.builder()
+                .id(place.getId())
+                .name(place.getName())
+                .description(place.getDescription())
+                .address(place.getAddress())
+                .latitude(place.getLocation().getY())
+                .longitude(place.getLocation().getX())
+                .categories(categories)
+                .sourceType(place.getSourceType().name())
+                .distanceMeters(distanceMeters)
+                .build();
+    }
+
+    private long calculateDistanceMeters(
+            double latitude1,
+            double longitude1,
+            double latitude2,
+            double longitude2
+    ) {
+        double latitudeDelta =
+                Math.toRadians(latitude2 - latitude1);
+
+        double longitudeDelta =
+                Math.toRadians(longitude2 - longitude1);
+
+        double latitude1Radians =
+                Math.toRadians(latitude1);
+
+        double latitude2Radians =
+                Math.toRadians(latitude2);
+
+        double a =
+                Math.sin(latitudeDelta / 2)
+                        * Math.sin(latitudeDelta / 2)
+                        +
+                        Math.cos(latitude1Radians)
+                                * Math.cos(latitude2Radians)
+                                * Math.sin(longitudeDelta / 2)
+                                * Math.sin(longitudeDelta / 2);
+
+        double c = 2 * Math.atan2(
+                Math.sqrt(a),
+                Math.sqrt(1 - a)
+        );
+
+        return Math.round(
+                EARTH_RADIUS_METERS * c
+        );
+    }
+
+    public List<MapPlaceResponse> findInBounds(
+            double minLatitude,
+            double minLongitude,
+            double maxLatitude,
+            double maxLongitude,
+            Set<String> categoryCodes,
+            int limit
+    ) {
+        validateBounds(
+                minLatitude,
+                minLongitude,
+                maxLatitude,
+                maxLongitude
+        );
+
+        List<Place> places;
+
+        if (categoryCodes == null || categoryCodes.isEmpty()) {
+            places = placeRepository.findActiveInBounds(
+                    minLatitude,
+                    minLongitude,
+                    maxLatitude,
+                    maxLongitude,
+                    limit
+            );
+        } else {
+            Set<Category> categories =
+                    categoryRepository
+                            .findAllByCodeInAndActiveTrue(
+                                    categoryCodes
+                            );
+
+            validateCategories(
+                    categoryCodes,
+                    categories
+            );
+
+            places =
+                    placeRepository.findActiveInBoundsByCategories(
+                            minLatitude,
+                            minLongitude,
+                            maxLatitude,
+                            maxLongitude,
+                            categoryCodes,
+                            limit
+                    );
+        }
+
+        return places.stream()
+                .map(this::toMapResponse)
+                .toList();
+    }
+
+    private void validateBounds(
+            double minLatitude,
+            double minLongitude,
+            double maxLatitude,
+            double maxLongitude
+    ) {
+        if (minLatitude >= maxLatitude
+                || minLongitude >= maxLongitude) {
+
+            throw new InvalidMapBoundsException();
+        }
+    }
+
+    private MapPlaceResponse toMapResponse(Place place) {
+        Set<String> categories =
+                place.getCategories()
+                        .stream()
+                        .map(Category::getCode)
+                        .collect(Collectors.toSet());
+
+        return MapPlaceResponse.builder()
+                .id(place.getId())
+                .name(place.getName())
+                .latitude(place.getLocation().getY())
+                .longitude(place.getLocation().getX())
+                .categories(categories)
+                .build();
     }
 }

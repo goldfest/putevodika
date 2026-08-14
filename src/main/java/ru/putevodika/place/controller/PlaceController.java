@@ -12,6 +12,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
+import ru.putevodika.place.dto.NearbyPlaceResponse;
+import ru.putevodika.place.dto.MapPlaceResponse;
 
 import java.util.List;
 import java.util.Set;
@@ -43,7 +45,7 @@ public class PlaceController {
     }
 
     @GetMapping("/nearby")
-    public List<PlaceResponse> findNearby(
+    public List<NearbyPlaceResponse> findNearby(
             @RequestParam
             @DecimalMin("-90.0")
             @DecimalMax("90.0")
@@ -71,6 +73,46 @@ public class PlaceController {
                 latitude,
                 longitude,
                 radiusMeters,
+                categories,
+                limit
+        );
+    }
+
+    @GetMapping("/in-bounds")
+    public List<MapPlaceResponse> findInBounds(
+            @RequestParam
+            @DecimalMin("-90.0")
+            @DecimalMax("90.0")
+            double minLatitude,
+
+            @RequestParam
+            @DecimalMin("-180.0")
+            @DecimalMax("180.0")
+            double minLongitude,
+
+            @RequestParam
+            @DecimalMin("-90.0")
+            @DecimalMax("90.0")
+            double maxLatitude,
+
+            @RequestParam
+            @DecimalMin("-180.0")
+            @DecimalMax("180.0")
+            double maxLongitude,
+
+            @RequestParam(required = false)
+            Set<String> categories,
+
+            @RequestParam(defaultValue = "500")
+            @Min(1)
+            @Max(2000)
+            int limit
+    ) {
+        return placeService.findInBounds(
+                minLatitude,
+                minLongitude,
+                maxLatitude,
+                maxLongitude,
                 categories,
                 limit
         );

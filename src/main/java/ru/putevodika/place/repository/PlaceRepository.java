@@ -81,4 +81,64 @@ public interface PlaceRepository
             @Param("categoryCodes") Set<String> categoryCodes,
             @Param("limit") int limit
     );
+
+    @NativeQuery("""
+        SELECT p.*
+        FROM place p
+        WHERE p.active = TRUE
+          AND ST_Intersects(
+                p.location,
+                ST_MakeEnvelope(
+                    :minLongitude,
+                    :minLatitude,
+                    :maxLongitude,
+                    :maxLatitude,
+                    4326
+                )
+          )
+        ORDER BY p.id
+        LIMIT :limit
+        """)
+    List<Place> findActiveInBounds(
+            @Param("minLatitude") double minLatitude,
+            @Param("minLongitude") double minLongitude,
+            @Param("maxLatitude") double maxLatitude,
+            @Param("maxLongitude") double maxLongitude,
+            @Param("limit") int limit
+    );
+
+    @NativeQuery("""
+        SELECT p.*
+        FROM place p
+        WHERE p.active = TRUE
+          AND ST_Intersects(
+                p.location,
+                ST_MakeEnvelope(
+                    :minLongitude,
+                    :minLatitude,
+                    :maxLongitude,
+                    :maxLatitude,
+                    4326
+                )
+          )
+          AND EXISTS (
+                SELECT 1
+                FROM place_category pc
+                JOIN category c
+                  ON c.id = pc.category_id
+                WHERE pc.place_id = p.id
+                  AND c.active = TRUE
+                  AND c.code IN (:categoryCodes)
+          )
+        ORDER BY p.id
+        LIMIT :limit
+        """)
+    List<Place> findActiveInBoundsByCategories(
+            @Param("minLatitude") double minLatitude,
+            @Param("minLongitude") double minLongitude,
+            @Param("maxLatitude") double maxLatitude,
+            @Param("maxLongitude") double maxLongitude,
+            @Param("categoryCodes") Set<String> categoryCodes,
+            @Param("limit") int limit
+    );
 }
