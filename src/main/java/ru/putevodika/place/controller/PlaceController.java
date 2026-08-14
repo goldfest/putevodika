@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import ru.putevodika.place.dto.NearbyPlaceResponse;
 import ru.putevodika.place.dto.MapPlaceResponse;
+import ru.putevodika.place.dto.UpdatePlaceRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -116,5 +117,28 @@ public class PlaceController {
                 categories,
                 limit
         );
+    }
+
+    @PutMapping("/{id}")
+    public PlaceResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdatePlaceRequest request
+    ) {
+        return placeService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deactivate(
+            @PathVariable Long id
+    ) {
+        placeService.deactivate(id);
+    }
+
+    @PatchMapping("/{id}/activate")
+    public PlaceResponse activate(
+            @PathVariable Long id
+    ) {
+        return placeService.activate(id);
     }
 }

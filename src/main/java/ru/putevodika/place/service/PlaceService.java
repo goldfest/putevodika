@@ -16,6 +16,7 @@ import ru.putevodika.place.repository.PlaceRepository;
 import ru.putevodika.place.dto.NearbyPlaceResponse;
 import ru.putevodika.place.dto.MapPlaceResponse;
 import ru.putevodika.place.exception.InvalidMapBoundsException;
+import ru.putevodika.place.dto.UpdatePlaceRequest;
 
 import java.util.HashSet;
 import java.util.List;
@@ -328,5 +329,66 @@ public class PlaceService {
                 .longitude(place.getLocation().getX())
                 .categories(categories)
                 .build();
+    }
+
+    @Transactional
+    public PlaceResponse update(
+            Long id,
+            UpdatePlaceRequest request
+    ) {
+        Place place = placeRepository.findById(id)
+                .orElseThrow(
+                        () -> new PlaceNotFoundException(id)
+                );
+
+        Set<Category> categories =
+                categoryRepository.findAllByCodeInAndActiveTrue(
+                        request.getCategories()
+                );
+
+        validateCategories(
+                request.getCategories(),
+                categories
+        );
+
+        Point location = geometryFactory.createPoint(
+                new Coordinate(
+                        request.getLongitude(),
+                        request.getLatitude()
+                )
+        );
+
+        place.update(
+                request.getName(),
+                request.getDescription(),
+                request.getAddress(),
+                location
+        );
+
+        place.replaceCategories(categories);
+
+        return toResponse(place);
+    }
+
+    @Transactional
+    public void deactivate(Long id) {
+        Place place = placeRepository.findById(id)
+                .orElseThrow(
+                        () -> new PlaceNotFoundException(id)
+                );
+
+        place.deactivate();
+    }
+
+    @Transactional
+    public PlaceResponse activate(Long id) {
+        Place place = placeRepository.findById(id)
+                .orElseThrow(
+                        () -> new PlaceNotFoundException(id)
+                );
+
+        place.activate();
+
+        return toResponse(place);
     }
 }

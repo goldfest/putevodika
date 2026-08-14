@@ -117,6 +117,10 @@ public class Place {
         active = false;
     }
 
+    public void activate() {
+        active = true;
+    }
+
 
     @PrePersist
     void prePersist() {
@@ -131,5 +135,22 @@ public class Place {
     @PreUpdate
     void preUpdate() {
         updatedAt = Instant.now();
+    }
+
+    public void update(
+            String name,
+            String description,
+            String address,
+            Point location
+    ) {
+        this.name = name;
+        this.description = description;
+        this.address = address;
+        this.location = location;
+    }
+
+    public void replaceCategories(Set<Category> categories) {
+        this.categories.clear();
+        this.categories.addAll(categories);
     }
 }
