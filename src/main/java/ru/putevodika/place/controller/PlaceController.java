@@ -15,6 +15,12 @@ import org.springframework.validation.annotation.Validated;
 import ru.putevodika.place.dto.NearbyPlaceResponse;
 import ru.putevodika.place.dto.MapPlaceResponse;
 import ru.putevodika.place.dto.UpdatePlaceRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
+import ru.putevodika.common.dto.PageResponse;
+import ru.putevodika.place.dto.PlaceListItemResponse;
+import ru.putevodika.place.entity.PlaceSourceType;
 
 import java.util.List;
 import java.util.Set;
@@ -140,5 +146,38 @@ public class PlaceController {
             @PathVariable Long id
     ) {
         return placeService.activate(id);
+    }
+
+    @GetMapping
+    public PageResponse<PlaceListItemResponse> findAll(
+            @RequestParam(defaultValue = "0")
+            @Min(0)
+            int page,
+
+            @RequestParam(defaultValue = "20")
+            @Min(1)
+            @Max(100)
+            int size,
+
+            @RequestParam(required = false)
+            Boolean active,
+
+            @RequestParam(required = false)
+            PlaceSourceType sourceType,
+
+            @RequestParam(required = false)
+            String category,
+
+            @RequestParam(required = false)
+            String search
+    ) {
+        return placeService.findAll(
+                page,
+                size,
+                active,
+                sourceType,
+                category,
+                search
+        );
     }
 }

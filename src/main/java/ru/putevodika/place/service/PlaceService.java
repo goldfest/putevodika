@@ -26,6 +26,21 @@ import ru.putevodika.place.exception.UnknownPlaceCategoryException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import ru.putevodika.common.dto.PageResponse;
+import ru.putevodika.place.dto.PlaceListItemResponse;
+import ru.putevodika.place.entity.PlaceSourceType;
+
+import static ru.putevodika.place.repository.specification.PlaceSpecifications.hasActive;
+import static ru.putevodika.place.repository.specification.PlaceSpecifications.hasCategory;
+import static ru.putevodika.place.repository.specification.PlaceSpecifications.hasSourceType;
+import static ru.putevodika.place.repository.specification.PlaceSpecifications.nameContains;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -390,5 +405,62 @@ public class PlaceService {
         place.activate();
 
         return toResponse(place);
+    }
+
+    public PageResponse<PlaceListItemResponse> findAll(
+            int page,
+            int size,
+            Boolean active,
+            PlaceSourceType sourceType,
+            String category,
+            String search
+    ) {
+        Specification<Place> specification =
+                Specification.allOf(
+                        hasActive(active),
+                        hasSourceType(sourceType),
+                        hasCategory(category),
+                        nameContains(search)
+                );
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.DESC,
+                        "updatedAt"
+                )
+        );
+
+        Page<PlaceListItemResponse> result =
+                placeRepository
+                        .findAll(
+                                specification,
+                                pageable
+                        )
+                        .map(this::toListItemResponse);
+
+        return PageResponse.from(result);
+    }
+
+    private PlaceListItemResponse toListItemResponse(
+            Place place
+    ) {
+        return PlaceListItemResponse.builder()
+                .id(place.getId())
+                .name(place.getName())
+                .address(place.getAddress())
+                .latitude(
+                        place.getLocation().getY()
+                )
+                .longitude(
+                        place.getLocation().getX()
+                )
+                .sourceType(
+                        place.getSourceType().name()
+                )
+                .active(place.isActive())
+                .updatedAt(place.getUpdatedAt())
+                .build();
     }
 }
