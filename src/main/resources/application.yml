@@ -25,3 +25,10 @@ management:
         include:
           - health
           - info
+
+app:
+  security:
+    jwt:
+      issuer: putevodika-backend
+      access-token-ttl: PT30M
+      secret: ${JWT_SECRET}
