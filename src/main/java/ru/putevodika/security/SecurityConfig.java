@@ -31,6 +31,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                         authorize
 
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**"
+                                )
+                                .permitAll()
+
                                 // Регистрация и вход
                                 .requestMatchers(
                                         HttpMethod.POST,

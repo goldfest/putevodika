@@ -1,5 +1,6 @@
 package ru.putevodika.place.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,10 @@ import java.util.List;
 @RequestMapping("/api/v1/places")
 @RequiredArgsConstructor
 @Validated
+@Tag(
+        name = "Туристические объекты",
+        description = "Каталог и пространственный поиск туристических объектов"
+)
 public class PlaceController {
 
     private final PlaceService placeService;

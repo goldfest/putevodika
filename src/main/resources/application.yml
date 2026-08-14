@@ -32,3 +32,12 @@ app:
       issuer: putevodika-backend
       access-token-ttl: PT30M
       secret: ${JWT_SECRET}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+  api-docs:
+    path: /v3/api-docs
