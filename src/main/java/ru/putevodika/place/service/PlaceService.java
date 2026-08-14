@@ -14,6 +14,11 @@ import ru.putevodika.place.entity.PlaceSourceType;
 import ru.putevodika.place.repository.CategoryRepository;
 import ru.putevodika.place.repository.PlaceRepository;
 
+import java.util.HashSet;
+import java.util.List;
+import ru.putevodika.place.exception.PlaceNotFoundException;
+import ru.putevodika.place.exception.UnknownPlaceCategoryException;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,15 +38,14 @@ public class PlaceService {
     public PlaceResponse create(CreatePlaceRequest request) {
 
         Set<Category> categories =
-                categoryRepository.findAllByCodeIn(
+                categoryRepository.findAllByCodeInAndActiveTrue(
                         request.getCategories()
                 );
 
-        if (categories.size() != request.getCategories().size()) {
-            throw new IllegalArgumentException(
-                    "Unknown place category"
-            );
-        }
+        validateCategories(
+                request.getCategories(),
+                categories
+        );
 
         Point location = geometryFactory.createPoint(
                 new Coordinate(
@@ -71,9 +75,7 @@ public class PlaceService {
 
         Place place = placeRepository.findById(id)
                 .orElseThrow(
-                        () -> new IllegalArgumentException(
-                                "Place not found: " + id
-                        )
+                        () -> new PlaceNotFoundException(id)
                 );
 
         return toResponse(place);
@@ -101,5 +103,66 @@ public class PlaceService {
                 .createdAt(place.getCreatedAt())
                 .updatedAt(place.getUpdatedAt())
                 .build();
+    }
+
+    public List<PlaceResponse> findNearby(
+            double latitude,
+            double longitude,
+            int radiusMeters,
+            Set<String> categoryCodes,
+            int limit
+    ) {
+        if (categoryCodes == null || categoryCodes.isEmpty()) {
+            return placeRepository.findActiveNearby(
+                            latitude,
+                            longitude,
+                            radiusMeters,
+                            limit
+                    )
+                    .stream()
+                    .map(this::toResponse)
+                    .toList();
+        }
+
+        Set<Category> categories =
+                categoryRepository.findAllByCodeInAndActiveTrue(
+                        categoryCodes
+                );
+
+        validateCategories(
+                categoryCodes,
+                categories
+        );
+
+        return placeRepository.findActiveNearbyByCategories(
+                        latitude,
+                        longitude,
+                        radiusMeters,
+                        categoryCodes,
+                        limit
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private void validateCategories(
+            Set<String> requestedCodes,
+            Set<Category> categories
+    ) {
+        Set<String> existingCodes = categories.stream()
+                .map(Category::getCode)
+                .collect(Collectors.toSet());
+
+        Set<String> unknownCodes =
+                new HashSet<>(requestedCodes);
+
+        unknownCodes.removeAll(existingCodes);
+
+        if (!unknownCodes.isEmpty()) {
+            throw new UnknownPlaceCategoryException(
+                    unknownCodes
+            );
+        }
     }
 }
