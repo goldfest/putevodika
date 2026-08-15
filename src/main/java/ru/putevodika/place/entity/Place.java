@@ -162,4 +162,15 @@ public class Place {
         this.categories.clear();
         this.categories.addAll(categories);
     }
+
+    public void updateVisitInfo(
+            Integer visitDurationMinutes,
+            String openingHours
+    ) {
+        this.visitDurationMinutes =
+                visitDurationMinutes;
+
+        this.openingHours =
+                openingHours;
+    }
 }

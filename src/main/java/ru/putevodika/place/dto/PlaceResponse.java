@@ -5,6 +5,7 @@ import lombok.Value;
 
 import java.time.Instant;
 import java.util.Set;
+import java.util.Map;
 
 @Value
 @Builder
@@ -31,4 +32,10 @@ public class PlaceResponse {
     Instant createdAt;
 
     Instant updatedAt;
+
+    Integer visitDurationMinutes;
+
+    String openingHours;
+
+    Map<String, Integer> features;
 }

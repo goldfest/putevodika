@@ -19,6 +19,9 @@ import ru.putevodika.user.dto.UpdateProfileRequest;
 import ru.putevodika.user.dto.ChangePasswordRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import ru.putevodika.user.dto.FeaturePreferencesResponse;
+import ru.putevodika.user.dto.UpdateFeaturePreferencesRequest;
+import ru.putevodika.user.service.UserFeaturePreferenceService;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -31,6 +34,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class UserController {
 
     private final UserService userService;
+
+    private final UserFeaturePreferenceService
+            userFeaturePreferenceService;
 
 
     @GetMapping("/me")
@@ -79,6 +85,31 @@ public class UserController {
             @Valid @RequestBody ChangePasswordRequest request
     ) {
         userService.changePassword(
+                currentUserId(jwt),
+                request
+        );
+    }
+
+    @GetMapping("/me/feature-preferences")
+    public FeaturePreferencesResponse
+    getFeaturePreferences(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return userFeaturePreferenceService.get(
+                currentUserId(jwt)
+        );
+    }
+
+
+    @PutMapping("/me/feature-preferences")
+    public FeaturePreferencesResponse
+    updateFeaturePreferences(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid
+            @RequestBody
+            UpdateFeaturePreferencesRequest request
+    ) {
+        return userFeaturePreferenceService.replace(
                 currentUserId(jwt),
                 request
         );

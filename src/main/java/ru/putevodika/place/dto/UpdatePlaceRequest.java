@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 @Getter
@@ -31,4 +33,21 @@ public class UpdatePlaceRequest {
 
     @NotEmpty
     private Set<String> categories;
+
+    @Min(1)
+    @Max(1440)
+    private Integer visitDurationMinutes;
+
+    @Size(max = 255)
+    private String openingHours;
+
+    @NotNull
+    @Size(max = 50)
+    private Map<
+                @NotBlank String,
+                @NotNull
+                @Min(0)
+                @Max(5)
+                        Integer
+                > features = new HashMap<>();
 }

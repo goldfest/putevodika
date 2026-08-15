@@ -18,6 +18,7 @@ import ru.putevodika.place.dto.MapPlaceResponse;
 import ru.putevodika.place.dto.UpdatePlaceRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import ru.putevodika.common.dto.PageResponse;
 import ru.putevodika.place.dto.PlaceListItemResponse;
@@ -42,6 +43,7 @@ public class PlaceController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
     public PlaceResponse create(
             @Valid @RequestBody CreatePlaceRequest request
     ) {
@@ -131,6 +133,7 @@ public class PlaceController {
     }
 
     @PutMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
     public PlaceResponse update(
             @PathVariable Long id,
             @Valid @RequestBody UpdatePlaceRequest request
@@ -139,6 +142,7 @@ public class PlaceController {
     }
 
     @DeleteMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivate(
             @PathVariable Long id
@@ -147,6 +151,7 @@ public class PlaceController {
     }
 
     @PatchMapping("/{id}/activate")
+    @SecurityRequirement(name = "bearerAuth")
     public PlaceResponse activate(
             @PathVariable Long id
     ) {
@@ -154,6 +159,7 @@ public class PlaceController {
     }
 
     @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
     public PageResponse<PlaceListItemResponse> findAll(
             @RequestParam(defaultValue = "0")
             @Min(0)

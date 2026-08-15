@@ -3,6 +3,8 @@ package ru.putevodika.place.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.Set;
 
@@ -31,4 +33,23 @@ public class CreatePlaceRequest {
 
     @NotEmpty
     private Set<String> categories;
+
+    @Min(1)
+    @Max(1440)
+    private Integer visitDurationMinutes;
+
+
+    @Size(max = 255)
+    private String openingHours;
+
+
+    @NotNull
+    @Size(max = 50)
+    private Map<
+            @NotBlank String,
+            @NotNull
+            @Min(0)
+            @Max(5)
+                    Integer
+            > features = new HashMap<>();
 }

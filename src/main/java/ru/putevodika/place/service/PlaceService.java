@@ -17,15 +17,17 @@ import ru.putevodika.place.dto.NearbyPlaceResponse;
 import ru.putevodika.place.dto.MapPlaceResponse;
 import ru.putevodika.place.exception.InvalidMapBoundsException;
 import ru.putevodika.place.dto.UpdatePlaceRequest;
-
+import ru.putevodika.feature.entity.Feature;
+import ru.putevodika.feature.entity.PlaceFeature;
+import ru.putevodika.feature.repository.PlaceFeatureRepository;
+import ru.putevodika.feature.service.FeatureService;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.List;
 import ru.putevodika.place.exception.PlaceNotFoundException;
 import ru.putevodika.place.exception.UnknownPlaceCategoryException;
-
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +57,11 @@ public class PlaceService {
 
     private final GeometryFactory geometryFactory;
 
+    private final PlaceFeatureRepository
+            placeFeatureRepository;
+
+    private final FeatureService featureService;
+
 
     @Transactional
     public PlaceResponse create(CreatePlaceRequest request) {
@@ -68,6 +75,11 @@ public class PlaceService {
                 request.getCategories(),
                 categories
         );
+
+        Map<String, Feature> features =
+                featureService.resolveActive(
+                        request.getFeatures().keySet()
+                );
 
         Point location = geometryFactory.createPoint(
                 new Coordinate(
@@ -85,9 +97,19 @@ public class PlaceService {
                 null
         );
 
+        place.updateVisitInfo(
+                request.getVisitDurationMinutes(),
+                request.getOpeningHours()
+        );
+
         categories.forEach(place::addCategory);
 
         Place saved = placeRepository.save(place);
+        replaceFeatures(
+                saved,
+                features,
+                request.getFeatures()
+        );
 
         return toResponse(saved);
     }
@@ -112,6 +134,25 @@ public class PlaceService {
                         .map(Category::getCode)
                         .collect(Collectors.toSet());
 
+        Map<String, Integer> features =
+                placeFeatureRepository
+                        .findAllByPlaceId(
+                                place.getId()
+                        )
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        placeFeature ->
+                                                placeFeature
+                                                        .getFeature()
+                                                        .getCode(),
+
+                                        placeFeature ->
+                                                (int) placeFeature
+                                                        .getValue()
+                                )
+                        );
+
         return PlaceResponse.builder()
                 .id(place.getId())
                 .name(place.getName())
@@ -124,6 +165,13 @@ public class PlaceService {
                 .active(place.isActive())
                 .createdAt(place.getCreatedAt())
                 .updatedAt(place.getUpdatedAt())
+                .visitDurationMinutes(
+                        place.getVisitDurationMinutes()
+                )
+                .openingHours(
+                        place.getOpeningHours()
+                )
+                .features(features)
                 .build();
     }
 
@@ -366,6 +414,11 @@ public class PlaceService {
                 categories
         );
 
+        Map<String, Feature> features =
+                featureService.resolveActive(
+                        request.getFeatures().keySet()
+                );
+
         Point location = geometryFactory.createPoint(
                 new Coordinate(
                         request.getLongitude(),
@@ -380,7 +433,17 @@ public class PlaceService {
                 location
         );
 
+        place.updateVisitInfo(
+                request.getVisitDurationMinutes(),
+                request.getOpeningHours()
+        );
+
         place.replaceCategories(categories);
+        replaceFeatures(
+                place,
+                features,
+                request.getFeatures()
+        );
 
         return toResponse(place);
     }
@@ -462,5 +525,38 @@ public class PlaceService {
                 .active(place.isActive())
                 .updatedAt(place.getUpdatedAt())
                 .build();
+    }
+
+    private void replaceFeatures(
+            Place place,
+            Map<String, Feature> features,
+            Map<String, Integer> values
+    ) {
+        placeFeatureRepository.deleteAllByPlaceId(
+                place.getId()
+        );
+
+        if (values == null || values.isEmpty()) {
+            return;
+        }
+
+        List<PlaceFeature> placeFeatures =
+                values.entrySet()
+                        .stream()
+                        .map(entry ->
+                                new PlaceFeature(
+                                        place,
+                                        features.get(
+                                                entry.getKey()
+                                        ),
+                                        entry.getValue()
+                                                .shortValue()
+                                )
+                        )
+                        .toList();
+
+        placeFeatureRepository.saveAll(
+                placeFeatures
+        );
     }
 }

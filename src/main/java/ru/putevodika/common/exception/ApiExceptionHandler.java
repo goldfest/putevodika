@@ -14,6 +14,7 @@ import ru.putevodika.auth.exception.UserInactiveException;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
 import ru.putevodika.user.exception.SelfAdministrationException;
+import ru.putevodika.feature.exception.UnknownFeatureException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -193,6 +194,28 @@ public class ApiExceptionHandler {
 
         problemDetail.setTitle(
                 "Недопустимая административная операция"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(UnknownFeatureException.class)
+    public ProblemDetail handleUnknownFeature(
+            UnknownFeatureException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Некорректные числовые характеристики"
+        );
+
+        problemDetail.setProperty(
+                "unknownFeatures",
+                exception.getFeatureCodes()
         );
 
         return problemDetail;
