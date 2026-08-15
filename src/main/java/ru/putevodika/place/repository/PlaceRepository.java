@@ -143,4 +143,8 @@ public interface PlaceRepository
             @Param("categoryCodes") Set<String> categoryCodes,
             @Param("limit") int limit
     );
+
+    List<Place> findAllByIdInAndActiveTrue(
+            Set<Long> ids
+    );
 }

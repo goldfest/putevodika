@@ -15,6 +15,9 @@ import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
 import ru.putevodika.user.exception.SelfAdministrationException;
 import ru.putevodika.feature.exception.UnknownFeatureException;
+import ru.putevodika.route.exception.DuplicateRoutePlaceException;
+import ru.putevodika.route.exception.RouteNotFoundException;
+import ru.putevodika.route.exception.UnavailableRoutePlaceException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -216,6 +219,64 @@ public class ApiExceptionHandler {
         problemDetail.setProperty(
                 "unknownFeatures",
                 exception.getFeatureCodes()
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(RouteNotFoundException.class)
+    public ProblemDetail handleRouteNotFound(
+            RouteNotFoundException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Маршрут не найден"
+        );
+
+        return problemDetail;
+    }
+
+
+    @ExceptionHandler(UnavailableRoutePlaceException.class)
+    public ProblemDetail handleUnavailableRoutePlaces(
+            UnavailableRoutePlaceException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Некорректные объекты маршрута"
+        );
+
+        problemDetail.setProperty(
+                "placeIds",
+                exception.getPlaceIds()
+        );
+
+        return problemDetail;
+    }
+
+
+    @ExceptionHandler(DuplicateRoutePlaceException.class)
+    public ProblemDetail handleDuplicateRoutePlace(
+            DuplicateRoutePlaceException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Некорректный маршрут"
         );
 
         return problemDetail;

@@ -117,6 +117,11 @@ public class SecurityConfig {
                                 )
                                 .hasRole("ADMIN")
 
+                                .requestMatchers(
+                                        "/api/v1/routes/**"
+                                )
+                                .authenticated()
+
                                 // Все остальное требует входа
                                 .anyRequest()
                                 .authenticated()
