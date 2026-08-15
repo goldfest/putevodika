@@ -57,6 +57,15 @@ public class Place {
     )
     private String externalId;
 
+    @Column(name = "visit_duration_minutes")
+    private Integer visitDurationMinutes;
+
+    @Column(
+            name = "opening_hours",
+            length = 255
+    )
+    private String openingHours;
+
     @Column(
             name = "active",
             nullable = false

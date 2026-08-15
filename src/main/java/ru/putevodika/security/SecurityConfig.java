@@ -71,6 +71,13 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
+                                // Числовые характеристики
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/v1/features"
+                                )
+                                .permitAll()
+
                                 // Карточка места и spatial API
                                 .requestMatchers(
                                         HttpMethod.GET,
