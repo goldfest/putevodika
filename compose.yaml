@@ -28,5 +28,24 @@ services:
 
     restart: unless-stopped
 
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v26.8.0-debian
+
+    container_name: putevodika-osrm
+
+    command:
+      - osrm-routed
+      - --algorithm
+      - mld
+      - /data/ulyanovsk_oblast-latest.osrm
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - ./osrm-data:/data:ro
+
+    restart: unless-stopped
+
 volumes:
   putevodika-postgres-data:

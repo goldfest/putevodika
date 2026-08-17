@@ -15,6 +15,11 @@ spring:
   flyway:
     enabled: true
 
+  http:
+    clients:
+      connect-timeout: 2s
+      read-timeout: 5s
+
 server:
   port: 8080
 
@@ -32,6 +37,8 @@ app:
       issuer: putevodika-backend
       access-token-ttl: PT30M
       secret: ${JWT_SECRET}
+  osrm:
+    base-url: ${OSRM_BASE_URL:http://localhost:5000}
 
 springdoc:
   swagger-ui:

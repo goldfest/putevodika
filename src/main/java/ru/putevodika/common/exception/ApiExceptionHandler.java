@@ -18,6 +18,8 @@ import ru.putevodika.feature.exception.UnknownFeatureException;
 import ru.putevodika.route.exception.DuplicateRoutePlaceException;
 import ru.putevodika.route.exception.RouteNotFoundException;
 import ru.putevodika.route.exception.UnavailableRoutePlaceException;
+import ru.putevodika.routing.exception.RoutingProviderUnavailableException;
+import ru.putevodika.routing.exception.WalkingRouteNotFoundException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -277,6 +279,43 @@ public class ApiExceptionHandler {
 
         problemDetail.setTitle(
                 "Некорректный маршрут"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(WalkingRouteNotFoundException.class)
+    public ProblemDetail handleWalkingRouteNotFound(
+            WalkingRouteNotFoundException exception
+    ) {
+
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Маршрут не построен"
+        );
+
+        return problemDetail;
+    }
+
+
+    @ExceptionHandler(RoutingProviderUnavailableException.class)
+    public ProblemDetail handleRoutingUnavailable(
+            RoutingProviderUnavailableException exception
+    ) {
+
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Сервис маршрутизации недоступен"
         );
 
         return problemDetail;

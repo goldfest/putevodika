@@ -45,3 +45,5 @@ replay_pid*
 application-local.yml
 application-local.yaml
 application-local.properties
+
+/osrm-data/
