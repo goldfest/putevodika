@@ -4,19 +4,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.putevodika.auth.dto.AuthTokenResponse;
+import ru.putevodika.auth.dto.LoginRequest;
+import ru.putevodika.auth.dto.RefreshTokenRequest;
+import ru.putevodika.auth.exception.InvalidCredentialsException;
+import ru.putevodika.auth.exception.UserInactiveException;
 import ru.putevodika.place.entity.Category;
 import ru.putevodika.place.repository.CategoryRepository;
+import ru.putevodika.security.JwtTokenService;
 import ru.putevodika.user.dto.RegisterRequest;
 import ru.putevodika.user.dto.UserResponse;
 import ru.putevodika.user.entity.UserAccount;
-import ru.putevodika.user.exception.EmailAlreadyUsedException;
+import ru.putevodika.user.exception.LoginAlreadyUsedException;
 import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
 import ru.putevodika.user.repository.UserRepository;
-import ru.putevodika.auth.dto.AuthTokenResponse;
-import ru.putevodika.auth.dto.LoginRequest;
-import ru.putevodika.auth.exception.InvalidCredentialsException;
-import ru.putevodika.auth.exception.UserInactiveException;
-import ru.putevodika.security.JwtTokenService;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -36,16 +37,19 @@ public class AuthService {
 
     private final JwtTokenService jwtTokenService;
 
+    private final RefreshTokenService refreshTokenService;
+
+    @Transactional
     public AuthTokenResponse login(
             LoginRequest request
     ) {
-        String email = normalizeEmail(
-                request.getEmail()
+        String login = normalizeLogin(
+                request.getLogin()
         );
 
         UserAccount user =
                 userRepository
-                        .findByEmailIgnoreCase(email)
+                        .findByLoginIgnoreCase(login)
                         .orElseThrow(
                                 InvalidCredentialsException::new
                         );
@@ -61,19 +65,49 @@ public class AuthService {
             throw new UserInactiveException();
         }
 
-        return jwtTokenService.createAccessToken(user);
+        String refreshToken =
+                refreshTokenService.issue(user);
+
+        return createTokenResponse(
+                user,
+                refreshToken
+        );
+    }
+
+    @Transactional
+    public AuthTokenResponse refresh(
+            RefreshTokenRequest request
+    ) {
+        RefreshTokenService.RotatedRefreshToken rotated =
+                refreshTokenService.rotate(
+                        request.getRefreshToken()
+                );
+
+        return createTokenResponse(
+                rotated.user(),
+                rotated.refreshToken()
+        );
+    }
+
+    @Transactional
+    public void logout(
+            RefreshTokenRequest request
+    ) {
+        refreshTokenService.revoke(
+                request.getRefreshToken()
+        );
     }
 
     @Transactional
     public UserResponse register(
             RegisterRequest request
     ) {
-        String email = normalizeEmail(
-                request.getEmail()
+        String login = normalizeLogin(
+                request.getLogin()
         );
 
-        if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new EmailAlreadyUsedException(email);
+        if (userRepository.existsByLoginIgnoreCase(login)) {
+            throw new LoginAlreadyUsedException(login);
         }
 
         Set<String> requestedCategories =
@@ -100,10 +134,18 @@ public class AuthService {
                 );
 
         UserAccount user = new UserAccount(
-                email,
+                login,
                 passwordHash,
                 request.getDisplayName().trim()
         );
+
+        if (request.getAvatarUrl() != null) {
+            user.changeAvatarUrl(
+                    normalizeAvatarUrl(
+                            request.getAvatarUrl()
+                    )
+            );
+        }
 
         user.replacePreferredCategories(
                 categories
@@ -115,13 +157,46 @@ public class AuthService {
         return toResponse(saved);
     }
 
+    private AuthTokenResponse createTokenResponse(
+            UserAccount user,
+            String refreshToken
+    ) {
+        JwtTokenService.AccessToken accessToken =
+                jwtTokenService.createAccessToken(user);
 
-    private String normalizeEmail(String email) {
-        return email
+        return AuthTokenResponse.builder()
+                .accessToken(
+                        accessToken.value()
+                )
+                .refreshToken(
+                        refreshToken
+                )
+                .tokenType("Bearer")
+                .accessExpiresInSeconds(
+                        accessToken.expiresInSeconds()
+                )
+                .refreshExpiresInSeconds(
+                        refreshTokenService
+                                .getRefreshTokenTtlSeconds()
+                )
+                .build();
+    }
+
+    private String normalizeLogin(String login) {
+        return login
                 .trim()
                 .toLowerCase(Locale.ROOT);
     }
 
+    private String normalizeAvatarUrl(
+            String avatarUrl
+    ) {
+        String value = avatarUrl.trim();
+
+        return value.isEmpty()
+                ? null
+                : value;
+    }
 
     private void validateCategories(
             Set<String> requestedCodes,
@@ -144,7 +219,6 @@ public class AuthService {
         }
     }
 
-
     private UserResponse toResponse(
             UserAccount user
     ) {
@@ -156,8 +230,9 @@ public class AuthService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .email(user.getEmail())
+                .login(user.getLogin())
                 .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .active(user.isActive())
                 .preferredCategories(

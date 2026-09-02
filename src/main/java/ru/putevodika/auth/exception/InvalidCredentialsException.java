@@ -4,6 +4,6 @@ public class InvalidCredentialsException
         extends RuntimeException {
 
     public InvalidCredentialsException() {
-        super("Неверный email или пароль");
+        super("Неверный логин или пароль");
     }
 }

@@ -9,7 +9,11 @@ public class AuthTokenResponse {
 
     String accessToken;
 
+    String refreshToken;
+
     String tokenType;
 
-    long expiresInSeconds;
+    long accessExpiresInSeconds;
+
+    long refreshExpiresInSeconds;
 }

@@ -17,6 +17,9 @@ public record JwtProperties(
         @NotNull
         Duration accessTokenTtl,
 
+        @NotNull
+        Duration refreshTokenTtl,
+
         @NotBlank
         String secret
 ) {

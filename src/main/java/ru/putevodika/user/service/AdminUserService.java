@@ -18,6 +18,7 @@ import ru.putevodika.user.entity.UserRole;
 import ru.putevodika.user.exception.SelfAdministrationException;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.repository.UserRepository;
+import ru.putevodika.auth.service.RefreshTokenService;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +33,8 @@ import static ru.putevodika.user.repository.specification.UserSpecifications.has
 public class AdminUserService {
 
     private final UserRepository userRepository;
+
+    private final RefreshTokenService refreshTokenService;
 
 
     public PageResponse<UserListItemResponse> findAll(
@@ -111,6 +114,10 @@ public class AdminUserService {
         UserAccount user = getUser(userId);
 
         user.deactivate();
+
+        refreshTokenService.revokeAllForUser(
+                userId
+        );
     }
 
 
@@ -148,8 +155,9 @@ public class AdminUserService {
     ) {
         return UserListItemResponse.builder()
                 .id(user.getId())
-                .email(user.getEmail())
+                .login(user.getLogin())
                 .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .active(user.isActive())
                 .createdAt(user.getCreatedAt())
@@ -169,8 +177,9 @@ public class AdminUserService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .email(user.getEmail())
+                .login(user.getLogin())
                 .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .active(user.isActive())
                 .preferredCategories(

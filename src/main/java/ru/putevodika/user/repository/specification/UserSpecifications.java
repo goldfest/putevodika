@@ -64,7 +64,7 @@ public final class UserSpecifications {
             return builder.or(
                     builder.like(
                             builder.lower(
-                                    root.get("email")
+                                    root.get("login")
                             ),
                             pattern
                     ),

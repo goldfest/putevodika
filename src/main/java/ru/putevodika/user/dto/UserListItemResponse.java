@@ -11,9 +11,11 @@ public class UserListItemResponse {
 
     Long id;
 
-    String email;
+    String login;
 
     String displayName;
+
+    String avatarUrl;
 
     String role;
 

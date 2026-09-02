@@ -1,9 +1,9 @@
 package ru.putevodika.user.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import ru.putevodika.user.entity.UserAccount;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import ru.putevodika.user.entity.UserAccount;
 
 import java.util.Optional;
 
@@ -11,12 +11,12 @@ public interface UserRepository
         extends JpaRepository<UserAccount, Long>,
         JpaSpecificationExecutor<UserAccount> {
 
-    Optional<UserAccount> findByEmailIgnoreCase(
-            String email
+    Optional<UserAccount> findByLoginIgnoreCase(
+            String login
     );
 
-    boolean existsByEmailIgnoreCase(
-            String email
+    boolean existsByLoginIgnoreCase(
+            String login
     );
 
     @Override

@@ -5,7 +5,6 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
-import ru.putevodika.auth.dto.AuthTokenResponse;
 import ru.putevodika.user.entity.UserAccount;
 
 import java.time.Instant;
@@ -19,8 +18,7 @@ public class JwtTokenService {
 
     private final JwtProperties jwtProperties;
 
-
-    public AuthTokenResponse createAccessToken(
+    public AccessToken createAccessToken(
             UserAccount user
     ) {
         Instant now = Instant.now();
@@ -40,8 +38,8 @@ public class JwtTokenService {
                                 user.getId().toString()
                         )
                         .claim(
-                                "email",
-                                user.getEmail()
+                                "login",
+                                user.getLogin()
                         )
                         .claim(
                                 "roles",
@@ -59,14 +57,17 @@ public class JwtTokenService {
                         )
                         .getTokenValue();
 
-        return AuthTokenResponse.builder()
-                .accessToken(token)
-                .tokenType("Bearer")
-                .expiresInSeconds(
-                        jwtProperties
-                                .accessTokenTtl()
-                                .toSeconds()
-                )
-                .build();
+        return new AccessToken(
+                token,
+                jwtProperties
+                        .accessTokenTtl()
+                        .toSeconds()
+        );
+    }
+
+    public record AccessToken(
+            String value,
+            long expiresInSeconds
+    ) {
     }
 }
