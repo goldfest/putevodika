@@ -21,11 +21,11 @@ public class UserAccount {
     private Long id;
 
     @Column(
-            name = "email",
+            name = "login",
             nullable = false,
-            length = 320
+            length = 100
     )
-    private String email;
+    private String login;
 
     @Column(
             name = "password_hash",
@@ -40,6 +40,12 @@ public class UserAccount {
             length = 100
     )
     private String displayName;
+
+    @Column(
+            name = "avatar_url",
+            length = 2048
+    )
+    private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(
@@ -70,11 +76,9 @@ public class UserAccount {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_preferred_category",
-
             joinColumns = @JoinColumn(
                     name = "user_id"
             ),
-
             inverseJoinColumns = @JoinColumn(
                     name = "category_id"
             )
@@ -82,20 +86,17 @@ public class UserAccount {
     private Set<Category> preferredCategories =
             new HashSet<>();
 
-
     public UserAccount(
-            String email,
+            String login,
             String passwordHash,
             String displayName
     ) {
-        this.email = email;
+        this.login = login;
         this.passwordHash = passwordHash;
         this.displayName = displayName;
-
         this.role = UserRole.USER;
         this.active = true;
     }
-
 
     public void replacePreferredCategories(
             Set<Category> categories
@@ -104,13 +105,17 @@ public class UserAccount {
         preferredCategories.addAll(categories);
     }
 
-
     public void changeDisplayName(
             String displayName
     ) {
         this.displayName = displayName;
     }
 
+    public void changeAvatarUrl(
+            String avatarUrl
+    ) {
+        this.avatarUrl = avatarUrl;
+    }
 
     public void changePasswordHash(
             String passwordHash
@@ -118,16 +123,13 @@ public class UserAccount {
         this.passwordHash = passwordHash;
     }
 
-
     public void deactivate() {
         active = false;
     }
 
-
     public void activate() {
         active = true;
     }
-
 
     @PrePersist
     void prePersist() {
@@ -136,7 +138,6 @@ public class UserAccount {
         createdAt = now;
         updatedAt = now;
     }
-
 
     @PreUpdate
     void preUpdate() {

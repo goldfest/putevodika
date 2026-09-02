@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.putevodika.place.exception.PlaceNotFoundException;
 import ru.putevodika.place.exception.UnknownPlaceCategoryException;
 import ru.putevodika.place.exception.InvalidMapBoundsException;
-import ru.putevodika.user.exception.EmailAlreadyUsedException;
+import ru.putevodika.user.exception.LoginAlreadyUsedException;
 import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
 import ru.putevodika.auth.exception.InvalidCredentialsException;
 import ru.putevodika.auth.exception.UserInactiveException;
@@ -20,6 +20,7 @@ import ru.putevodika.route.exception.RouteNotFoundException;
 import ru.putevodika.route.exception.UnavailableRoutePlaceException;
 import ru.putevodika.routing.exception.RoutingProviderUnavailableException;
 import ru.putevodika.routing.exception.WalkingRouteNotFoundException;
+import ru.putevodika.auth.exception.InvalidRefreshTokenException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -78,9 +79,9 @@ public class ApiExceptionHandler {
         return problemDetail;
     }
 
-    @ExceptionHandler(EmailAlreadyUsedException.class)
-    public ProblemDetail handleEmailAlreadyUsed(
-            EmailAlreadyUsedException exception
+    @ExceptionHandler(LoginAlreadyUsedException.class)
+    public ProblemDetail handleLoginAlreadyUsed(
+            LoginAlreadyUsedException exception
     ) {
         ProblemDetail problemDetail =
                 ProblemDetail.forStatusAndDetail(
@@ -89,7 +90,24 @@ public class ApiExceptionHandler {
                 );
 
         problemDetail.setTitle(
-                "Email уже используется"
+                "Логин уже используется"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ProblemDetail handleInvalidRefreshToken(
+            InvalidRefreshTokenException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.UNAUTHORIZED,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Ошибка обновления авторизации"
         );
 
         return problemDetail;
