@@ -68,6 +68,11 @@ public class UserAccount {
     private long authVersion;
 
     @Column(
+            name = "onboarding_completed_at"
+    )
+    private Instant onboardingCompletedAt;
+
+    @Column(
             name = "created_at",
             nullable = false
     )
@@ -110,6 +115,16 @@ public class UserAccount {
     ) {
         preferredCategories.clear();
         preferredCategories.addAll(categories);
+    }
+
+    public void completeOnboarding() {
+        if (onboardingCompletedAt == null) {
+            onboardingCompletedAt = Instant.now();
+        }
+    }
+
+    public boolean isOnboardingCompleted() {
+        return onboardingCompletedAt != null;
     }
 
     public void changeDisplayName(

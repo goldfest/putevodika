@@ -29,7 +29,6 @@ public class UserFeaturePreferenceService {
 
     private final FeatureService featureService;
 
-
     public FeaturePreferencesResponse get(
             Long userId
     ) {
@@ -44,16 +43,23 @@ public class UserFeaturePreferenceService {
         return toResponse(preferences);
     }
 
-
     @Transactional
     public FeaturePreferencesResponse replace(
             Long userId,
             UpdateFeaturePreferencesRequest request
     ) {
-        UserAccount user = getUser(userId);
+        return replace(
+                userId,
+                request.getPreferences()
+        );
+    }
 
-        Map<String, Integer> requested =
-                request.getPreferences();
+    @Transactional
+    public FeaturePreferencesResponse replace(
+            Long userId,
+            Map<String, Integer> requested
+    ) {
+        UserAccount user = getUser(userId);
 
         Map<String, Feature> features =
                 featureService.resolveActive(
@@ -86,7 +92,6 @@ public class UserFeaturePreferenceService {
         return toResponse(preferences);
     }
 
-
     private FeaturePreferencesResponse toResponse(
             List<UserFeaturePreference> preferences
     ) {
@@ -109,7 +114,6 @@ public class UserFeaturePreferenceService {
                 .preferences(values)
                 .build();
     }
-
 
     private UserAccount getUser(Long id) {
         return userRepository

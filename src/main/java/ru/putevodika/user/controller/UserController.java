@@ -1,5 +1,6 @@
 package ru.putevodika.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,10 +13,13 @@ import org.springframework.web.bind.annotation.*;
 import ru.putevodika.auth.service.AuthCookieService;
 import ru.putevodika.user.dto.ChangePasswordRequest;
 import ru.putevodika.user.dto.FeaturePreferencesResponse;
+import ru.putevodika.user.dto.OnboardingRequest;
+import ru.putevodika.user.dto.OnboardingResponse;
 import ru.putevodika.user.dto.UpdateFeaturePreferencesRequest;
 import ru.putevodika.user.dto.UpdatePreferencesRequest;
 import ru.putevodika.user.dto.UpdateProfileRequest;
 import ru.putevodika.user.dto.UserResponse;
+import ru.putevodika.user.service.OnboardingService;
 import ru.putevodika.user.service.UserFeaturePreferenceService;
 import ru.putevodika.user.service.UserService;
 
@@ -33,6 +37,9 @@ public class UserController {
 
     private final UserFeaturePreferenceService
             userFeaturePreferenceService;
+
+    private final OnboardingService
+            onboardingService;
 
     private final AuthCookieService
             authCookieService;
@@ -55,6 +62,20 @@ public class UserController {
 
         return userService.updateProfile(
                 userId,
+                request
+        );
+    }
+
+    @Operation(
+            summary = "Завершить первичную настройку пользователя"
+    )
+    @PostMapping("/me/onboarding")
+    public OnboardingResponse completeOnboarding(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody OnboardingRequest request
+    ) {
+        return onboardingService.complete(
+                currentUserId(jwt),
                 request
         );
     }

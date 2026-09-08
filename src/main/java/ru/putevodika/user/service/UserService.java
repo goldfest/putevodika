@@ -59,6 +59,12 @@ public class UserService {
                 .preferredCategories(
                         preferredCategories
                 )
+                .onboardingCompleted(
+                        user.isOnboardingCompleted()
+                )
+                .onboardingCompletedAt(
+                        user.getOnboardingCompletedAt()
+                )
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
@@ -69,10 +75,18 @@ public class UserService {
             Long userId,
             UpdatePreferencesRequest request
     ) {
-        UserAccount user = getUser(userId);
+        return replacePreferences(
+                userId,
+                request.getCategories()
+        );
+    }
 
-        Set<String> requestedCodes =
-                request.getCategories();
+    @Transactional
+    public UserResponse replacePreferences(
+            Long userId,
+            Set<String> requestedCodes
+    ) {
+        UserAccount user = getUser(userId);
 
         Set<Category> categories =
                 requestedCodes.isEmpty()

@@ -223,6 +223,12 @@ public class AuthService {
                 .preferredCategories(
                         preferredCategories
                 )
+                .onboardingCompleted(
+                        user.isOnboardingCompleted()
+                )
+                .onboardingCompletedAt(
+                        user.getOnboardingCompletedAt()
+                )
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

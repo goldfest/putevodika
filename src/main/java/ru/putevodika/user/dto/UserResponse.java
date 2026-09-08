@@ -24,6 +24,10 @@ public class UserResponse {
 
     Set<String> preferredCategories;
 
+    boolean onboardingCompleted;
+
+    Instant onboardingCompletedAt;
+
     Instant createdAt;
 
     Instant updatedAt;
