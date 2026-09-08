@@ -11,12 +11,12 @@ public interface UserRepository
         extends JpaRepository<UserAccount, Long>,
         JpaSpecificationExecutor<UserAccount> {
 
-    Optional<UserAccount> findByLoginIgnoreCase(
-            String login
+    Optional<UserAccount> findByEmailIgnoreCase(
+            String email
     );
 
-    boolean existsByLoginIgnoreCase(
-            String login
+    boolean existsByEmailIgnoreCase(
+            String email
     );
 
     @Override

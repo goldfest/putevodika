@@ -2,13 +2,15 @@ package ru.putevodika.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
-import ru.putevodika.auth.dto.AuthTokenResponse;
 import ru.putevodika.auth.dto.LoginRequest;
-import ru.putevodika.auth.dto.RefreshTokenRequest;
+import ru.putevodika.auth.exception.InvalidRefreshTokenException;
+import ru.putevodika.auth.service.AuthCookieService;
 import ru.putevodika.auth.service.AuthService;
 import ru.putevodika.user.dto.RegisterRequest;
 import ru.putevodika.user.dto.UserResponse;
@@ -18,11 +20,21 @@ import ru.putevodika.user.dto.UserResponse;
 @RequiredArgsConstructor
 @Tag(
         name = "Авторизация",
-        description = "Регистрация, вход и управление токенами"
+        description = "Регистрация, вход и управление сессией"
 )
 public class AuthController {
 
     private final AuthService authService;
+
+    private final AuthCookieService authCookieService;
+
+    @Operation(
+            summary = "Получить CSRF-токен"
+    )
+    @GetMapping("/csrf")
+    public CsrfToken csrf(CsrfToken csrfToken) {
+        return csrfToken;
+    }
 
     @Operation(
             summary = "Регистрация пользователя"
@@ -39,20 +51,47 @@ public class AuthController {
             summary = "Авторизация пользователя"
     )
     @PostMapping("/login")
-    public AuthTokenResponse login(
-            @Valid @RequestBody LoginRequest request
+    public UserResponse login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response
     ) {
-        return authService.login(request);
+        AuthService.AuthSession session =
+                authService.login(request);
+
+        authCookieService.writeSessionCookies(
+                response,
+                session.accessToken(),
+                session.refreshToken()
+        );
+
+        return session.user();
     }
 
     @Operation(
-            summary = "Обновление токенов"
+            summary = "Обновление сессии"
     )
     @PostMapping("/refresh")
-    public AuthTokenResponse refresh(
-            @Valid @RequestBody RefreshTokenRequest request
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void refresh(
+            @CookieValue(
+                    name = AuthCookieService.REFRESH_TOKEN_COOKIE,
+                    required = false
+            )
+            String refreshToken,
+            HttpServletResponse response
     ) {
-        return authService.refresh(request);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        AuthService.AuthSession session =
+                authService.refresh(refreshToken);
+
+        authCookieService.writeSessionCookies(
+                response,
+                session.accessToken(),
+                session.refreshToken()
+        );
     }
 
     @Operation(
@@ -61,8 +100,17 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(
-            @Valid @RequestBody RefreshTokenRequest request
+            @CookieValue(
+                    name = AuthCookieService.REFRESH_TOKEN_COOKIE,
+                    required = false
+            )
+            String refreshToken,
+            HttpServletResponse response
     ) {
-        authService.logout(request);
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            authService.logout(refreshToken);
+        }
+
+        authCookieService.clearSessionCookies(response);
     }
 }

@@ -1,24 +1,23 @@
 package ru.putevodika.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.putevodika.auth.service.RefreshTokenService;
 import ru.putevodika.place.entity.Category;
+import ru.putevodika.place.repository.CategoryRepository;
+import ru.putevodika.user.dto.ChangePasswordRequest;
+import ru.putevodika.user.dto.UpdatePreferencesRequest;
+import ru.putevodika.user.dto.UpdateProfileRequest;
 import ru.putevodika.user.dto.UserResponse;
 import ru.putevodika.user.entity.UserAccount;
+import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
+import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.repository.UserRepository;
-import ru.putevodika.place.repository.CategoryRepository;
-import ru.putevodika.user.dto.UpdatePreferencesRequest;
-import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
-import ru.putevodika.user.dto.UpdateProfileRequest;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.putevodika.user.dto.ChangePasswordRequest;
-import ru.putevodika.user.exception.IncorrectCurrentPasswordException;
-import ru.putevodika.auth.service.RefreshTokenService;
 
 import java.util.HashSet;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,13 +34,11 @@ public class UserService {
 
     private final RefreshTokenService refreshTokenService;
 
-
     public UserResponse getById(Long id) {
         return toResponse(
                 getUser(id)
         );
     }
-
 
     private UserResponse toResponse(
             UserAccount user
@@ -54,7 +51,7 @@ public class UserService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .login(user.getLogin())
+                .email(user.getEmail())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())

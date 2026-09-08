@@ -1,5 +1,6 @@
 package ru.putevodika.user.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -14,12 +15,9 @@ import java.util.Set;
 public class RegisterRequest {
 
     @NotBlank
-    @Size(min = 3, max = 100)
-    @Pattern(
-            regexp = "^[\\p{L}\\p{N}._-]+$",
-            message = "Логин может содержать только буквы, цифры, точку, дефис и нижнее подчеркивание"
-    )
-    private String login;
+    @Email
+    @Size(max = 320)
+    private String email;
 
     @NotBlank
     @Size(min = 8, max = 128)

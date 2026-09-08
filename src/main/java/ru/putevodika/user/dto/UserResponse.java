@@ -12,7 +12,7 @@ public class UserResponse {
 
     Long id;
 
-    String login;
+    String email;
 
     String displayName;
 

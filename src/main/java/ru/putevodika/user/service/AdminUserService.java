@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.putevodika.auth.service.RefreshTokenService;
 import ru.putevodika.common.dto.PageResponse;
 import ru.putevodika.place.entity.Category;
 import ru.putevodika.user.dto.ChangeUserRoleRequest;
@@ -18,7 +19,6 @@ import ru.putevodika.user.entity.UserRole;
 import ru.putevodika.user.exception.SelfAdministrationException;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.repository.UserRepository;
-import ru.putevodika.auth.service.RefreshTokenService;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,7 +35,6 @@ public class AdminUserService {
     private final UserRepository userRepository;
 
     private final RefreshTokenService refreshTokenService;
-
 
     public PageResponse<UserListItemResponse> findAll(
             int page,
@@ -72,13 +71,11 @@ public class AdminUserService {
         return PageResponse.from(result);
     }
 
-
     public UserResponse getById(Long id) {
         return toResponse(
                 getUser(id)
         );
     }
-
 
     @Transactional
     public UserResponse changeRole(
@@ -100,7 +97,6 @@ public class AdminUserService {
         return toResponse(user);
     }
 
-
     @Transactional
     public void deactivate(
             Long administratorId,
@@ -120,7 +116,6 @@ public class AdminUserService {
         );
     }
 
-
     @Transactional
     public UserResponse activate(Long userId) {
         UserAccount user = getUser(userId);
@@ -130,7 +125,6 @@ public class AdminUserService {
         return toResponse(user);
     }
 
-
     private UserAccount getUser(Long id) {
         return userRepository
                 .findById(id)
@@ -138,7 +132,6 @@ public class AdminUserService {
                         () -> new UserNotFoundException(id)
                 );
     }
-
 
     private void validateNotSelf(
             Long administratorId,
@@ -149,13 +142,12 @@ public class AdminUserService {
         }
     }
 
-
     private UserListItemResponse toListItemResponse(
             UserAccount user
     ) {
         return UserListItemResponse.builder()
                 .id(user.getId())
-                .login(user.getLogin())
+                .email(user.getEmail())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
@@ -164,7 +156,6 @@ public class AdminUserService {
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
-
 
     private UserResponse toResponse(
             UserAccount user
@@ -177,7 +168,7 @@ public class AdminUserService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .login(user.getLogin())
+                .email(user.getEmail())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())

@@ -90,7 +90,7 @@ public class ApiExceptionHandler {
                 );
 
         problemDetail.setTitle(
-                "Логин уже используется"
+                "Почта уже используется"
         );
 
         return problemDetail;

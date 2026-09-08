@@ -38,8 +38,8 @@ public class JwtTokenService {
                                 user.getId().toString()
                         )
                         .claim(
-                                "login",
-                                user.getLogin()
+                                "email",
+                                user.getEmail()
                         )
                         .claim(
                                 "roles",

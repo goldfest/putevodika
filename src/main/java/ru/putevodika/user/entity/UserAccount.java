@@ -21,11 +21,11 @@ public class UserAccount {
     private Long id;
 
     @Column(
-            name = "login",
+            name = "email",
             nullable = false,
-            length = 100
+            length = 320
     )
-    private String login;
+    private String email;
 
     @Column(
             name = "password_hash",
@@ -87,11 +87,11 @@ public class UserAccount {
             new HashSet<>();
 
     public UserAccount(
-            String login,
+            String email,
             String passwordHash,
             String displayName
     ) {
-        this.login = login;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.displayName = displayName;
         this.role = UserRole.USER;

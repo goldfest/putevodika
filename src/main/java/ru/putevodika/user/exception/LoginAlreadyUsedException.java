@@ -3,10 +3,10 @@ package ru.putevodika.user.exception;
 public class LoginAlreadyUsedException
         extends RuntimeException {
 
-    public LoginAlreadyUsedException(String login) {
+    public LoginAlreadyUsedException(String email) {
         super(
-                "Пользователь с логином %s уже существует"
-                        .formatted(login)
+                "Пользователь с почтой %s уже существует"
+                        .formatted(email)
         );
     }
 }

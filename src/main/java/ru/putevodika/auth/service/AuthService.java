@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.putevodika.auth.dto.AuthTokenResponse;
 import ru.putevodika.auth.dto.LoginRequest;
-import ru.putevodika.auth.dto.RefreshTokenRequest;
 import ru.putevodika.auth.exception.InvalidCredentialsException;
 import ru.putevodika.auth.exception.UserInactiveException;
 import ru.putevodika.place.entity.Category;
@@ -40,16 +38,16 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     @Transactional
-    public AuthTokenResponse login(
+    public AuthSession login(
             LoginRequest request
     ) {
-        String login = normalizeLogin(
-                request.getLogin()
+        String email = normalizeEmail(
+                request.getEmail()
         );
 
         UserAccount user =
                 userRepository
-                        .findByLoginIgnoreCase(login)
+                        .findByEmailIgnoreCase(email)
                         .orElseThrow(
                                 InvalidCredentialsException::new
                         );
@@ -68,22 +66,22 @@ public class AuthService {
         String refreshToken =
                 refreshTokenService.issue(user);
 
-        return createTokenResponse(
+        return createSession(
                 user,
                 refreshToken
         );
     }
 
     @Transactional
-    public AuthTokenResponse refresh(
-            RefreshTokenRequest request
+    public AuthSession refresh(
+            String refreshToken
     ) {
         RefreshTokenService.RotatedRefreshToken rotated =
                 refreshTokenService.rotate(
-                        request.getRefreshToken()
+                        refreshToken
                 );
 
-        return createTokenResponse(
+        return createSession(
                 rotated.user(),
                 rotated.refreshToken()
         );
@@ -91,23 +89,21 @@ public class AuthService {
 
     @Transactional
     public void logout(
-            RefreshTokenRequest request
+            String refreshToken
     ) {
-        refreshTokenService.revoke(
-                request.getRefreshToken()
-        );
+        refreshTokenService.revoke(refreshToken);
     }
 
     @Transactional
     public UserResponse register(
             RegisterRequest request
     ) {
-        String login = normalizeLogin(
-                request.getLogin()
+        String email = normalizeEmail(
+                request.getEmail()
         );
 
-        if (userRepository.existsByLoginIgnoreCase(login)) {
-            throw new LoginAlreadyUsedException(login);
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new LoginAlreadyUsedException(email);
         }
 
         Set<String> requestedCategories =
@@ -134,7 +130,7 @@ public class AuthService {
                 );
 
         UserAccount user = new UserAccount(
-                login,
+                email,
                 passwordHash,
                 request.getDisplayName().trim()
         );
@@ -157,33 +153,22 @@ public class AuthService {
         return toResponse(saved);
     }
 
-    private AuthTokenResponse createTokenResponse(
+    private AuthSession createSession(
             UserAccount user,
             String refreshToken
     ) {
         JwtTokenService.AccessToken accessToken =
                 jwtTokenService.createAccessToken(user);
 
-        return AuthTokenResponse.builder()
-                .accessToken(
-                        accessToken.value()
-                )
-                .refreshToken(
-                        refreshToken
-                )
-                .tokenType("Bearer")
-                .accessExpiresInSeconds(
-                        accessToken.expiresInSeconds()
-                )
-                .refreshExpiresInSeconds(
-                        refreshTokenService
-                                .getRefreshTokenTtlSeconds()
-                )
-                .build();
+        return new AuthSession(
+                toResponse(user),
+                accessToken.value(),
+                refreshToken
+        );
     }
 
-    private String normalizeLogin(String login) {
-        return login
+    private String normalizeEmail(String email) {
+        return email
                 .trim()
                 .toLowerCase(Locale.ROOT);
     }
@@ -230,7 +215,7 @@ public class AuthService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .login(user.getLogin())
+                .email(user.getEmail())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
@@ -241,5 +226,12 @@ public class AuthService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    public record AuthSession(
+            UserResponse user,
+            String accessToken,
+            String refreshToken
+    ) {
     }
 }

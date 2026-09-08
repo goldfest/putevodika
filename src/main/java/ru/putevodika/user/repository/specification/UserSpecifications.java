@@ -11,7 +11,6 @@ public final class UserSpecifications {
     private UserSpecifications() {
     }
 
-
     public static Specification<UserAccount> hasActive(
             Boolean active
     ) {
@@ -28,7 +27,6 @@ public final class UserSpecifications {
         };
     }
 
-
     public static Specification<UserAccount> hasRole(
             UserRole role
     ) {
@@ -44,7 +42,6 @@ public final class UserSpecifications {
             );
         };
     }
-
 
     public static Specification<UserAccount> containsSearch(
             String search
@@ -64,7 +61,7 @@ public final class UserSpecifications {
             return builder.or(
                     builder.like(
                             builder.lower(
-                                    root.get("login")
+                                    root.get("email")
                             ),
                             pattern
                     ),
