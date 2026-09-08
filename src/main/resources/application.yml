@@ -15,6 +15,26 @@ spring:
   flyway:
     enabled: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2s
+      timeout: 2s
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      "[mail.smtp.auth]": ${MAIL_SMTP_AUTH:false}
+      "[mail.smtp.starttls.enable]": ${MAIL_SMTP_STARTTLS:false}
+      "[mail.smtp.connectiontimeout]": 5000
+      "[mail.smtp.timeout]": 3000
+      "[mail.smtp.writetimeout]": 5000
+
   http:
     clients:
       connect-timeout: 2s
@@ -42,6 +62,16 @@ app:
       cookie-secure: ${AUTH_COOKIE_SECURE:false}
       cookie-same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+  auth:
+    password-reset:
+      token-ttl: ${PASSWORD_RESET_TOKEN_TTL:PT20M}
+      frontend-reset-url: ${PASSWORD_RESET_URL:http://localhost:5173/reset-password}
+      mail-from: ${MAIL_FROM:no-reply@putevodika.local}
+      email-max-requests: ${PASSWORD_RESET_EMAIL_MAX_REQUESTS:3}
+      ip-max-requests: ${PASSWORD_RESET_IP_MAX_REQUESTS:10}
+      rate-window: ${PASSWORD_RESET_RATE_WINDOW:PT15M}
+
   osrm:
     base-url: ${OSRM_BASE_URL:http://localhost:5000}
 

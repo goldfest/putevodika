@@ -172,6 +172,8 @@ public class UserService {
                 newPasswordHash
         );
 
+        user.incrementAuthVersion();
+
         refreshTokenService.revokeAllForUser(
                 userId
         );

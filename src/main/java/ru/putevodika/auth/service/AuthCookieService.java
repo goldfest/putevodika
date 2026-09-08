@@ -20,7 +20,7 @@ public class AuthCookieService {
     public static final String REFRESH_TOKEN_COOKIE =
             "refresh_token";
 
-    private static final String ACCESS_COOKIE_PATH = "/";
+    private static final String ACCESS_COOKIE_PATH = "/api";
 
     private static final String REFRESH_COOKIE_PATH =
             "/api/v1/auth";

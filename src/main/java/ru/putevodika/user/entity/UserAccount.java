@@ -62,6 +62,12 @@ public class UserAccount {
     private boolean active;
 
     @Column(
+            name = "auth_version",
+            nullable = false
+    )
+    private long authVersion;
+
+    @Column(
             name = "created_at",
             nullable = false
     )
@@ -96,6 +102,7 @@ public class UserAccount {
         this.displayName = displayName;
         this.role = UserRole.USER;
         this.active = true;
+        this.authVersion = 0L;
     }
 
     public void replacePreferredCategories(
@@ -121,6 +128,10 @@ public class UserAccount {
             String passwordHash
     ) {
         this.passwordHash = passwordHash;
+    }
+
+    public void incrementAuthVersion() {
+        authVersion++;
     }
 
     public void deactivate() {

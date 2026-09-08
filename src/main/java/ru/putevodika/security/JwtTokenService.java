@@ -42,6 +42,10 @@ public class JwtTokenService {
                                 user.getEmail()
                         )
                         .claim(
+                                "authVersion",
+                                user.getAuthVersion()
+                        )
+                        .claim(
                                 "roles",
                                 List.of(
                                         user.getRole().name()

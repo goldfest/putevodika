@@ -1,27 +1,23 @@
 package ru.putevodika.user.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import ru.putevodika.user.dto.UserResponse;
-import ru.putevodika.user.service.UserService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import ru.putevodika.user.dto.UpdatePreferencesRequest;
-import org.springframework.web.bind.annotation.PatchMapping;
-import ru.putevodika.user.dto.UpdateProfileRequest;
+import org.springframework.web.bind.annotation.*;
+import ru.putevodika.auth.service.AuthCookieService;
 import ru.putevodika.user.dto.ChangePasswordRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.putevodika.user.dto.FeaturePreferencesResponse;
 import ru.putevodika.user.dto.UpdateFeaturePreferencesRequest;
+import ru.putevodika.user.dto.UpdatePreferencesRequest;
+import ru.putevodika.user.dto.UpdateProfileRequest;
+import ru.putevodika.user.dto.UserResponse;
 import ru.putevodika.user.service.UserFeaturePreferenceService;
+import ru.putevodika.user.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -38,6 +34,8 @@ public class UserController {
     private final UserFeaturePreferenceService
             userFeaturePreferenceService;
 
+    private final AuthCookieService
+            authCookieService;
 
     @GetMapping("/me")
     public UserResponse getCurrentUser(
@@ -82,11 +80,16 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody ChangePasswordRequest request
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletResponse response
     ) {
         userService.changePassword(
                 currentUserId(jwt),
                 request
+        );
+
+        authCookieService.clearSessionCookies(
+                response
         );
     }
 
@@ -99,7 +102,6 @@ public class UserController {
                 currentUserId(jwt)
         );
     }
-
 
     @PutMapping("/me/feature-preferences")
     public FeaturePreferencesResponse
