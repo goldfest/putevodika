@@ -38,4 +38,6 @@ public class PlaceResponse {
     String openingHours;
 
     Map<String, Integer> features;
+
+    PlaceScoresResponse scores;
 }

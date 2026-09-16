@@ -3,6 +3,7 @@ package ru.putevodika.place.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.validation.Valid;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,4 +51,8 @@ public class UpdatePlaceRequest {
                 @Max(5)
                         Integer
                 > features = new HashMap<>();
+
+    @NotNull
+    @Valid
+    private PlaceScoresRequest scores;
 }

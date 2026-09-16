@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import java.util.Set;
+import jakarta.validation.Valid;
 
 @Getter
 @Setter
@@ -52,4 +53,8 @@ public class CreatePlaceRequest {
             @Max(5)
                     Integer
             > features = new HashMap<>();
+
+    @NotNull
+    @Valid
+    private PlaceScoresRequest scores;
 }

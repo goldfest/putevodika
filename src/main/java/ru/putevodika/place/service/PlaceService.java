@@ -43,6 +43,11 @@ import static ru.putevodika.place.repository.specification.PlaceSpecifications.h
 import static ru.putevodika.place.repository.specification.PlaceSpecifications.hasSourceType;
 import static ru.putevodika.place.repository.specification.PlaceSpecifications.nameContains;
 
+import ru.putevodika.place.entity.PlaceScore;
+import ru.putevodika.place.repository.PlaceScoreRepository;
+import ru.putevodika.place.dto.PlaceScoresRequest;
+import ru.putevodika.place.dto.PlaceScoresResponse;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -61,6 +66,8 @@ public class PlaceService {
             placeFeatureRepository;
 
     private final FeatureService featureService;
+
+    private final PlaceScoreRepository placeScoreRepository;
 
 
     @Transactional
@@ -109,6 +116,11 @@ public class PlaceService {
                 saved,
                 features,
                 request.getFeatures()
+        );
+
+        replaceScores(
+                saved,
+                request.getScores()
         );
 
         return toResponse(saved);
@@ -172,6 +184,9 @@ public class PlaceService {
                         place.getOpeningHours()
                 )
                 .features(features)
+                .scores(
+                        toScoresResponse(place.getId())
+                )
                 .build();
     }
 
@@ -445,6 +460,11 @@ public class PlaceService {
                 request.getFeatures()
         );
 
+        replaceScores(
+                place,
+                request.getScores()
+        );
+
         return toResponse(place);
     }
 
@@ -558,5 +578,73 @@ public class PlaceService {
         placeFeatureRepository.saveAll(
                 placeFeatures
         );
+    }
+
+    private void replaceScores(
+            Place place,
+            PlaceScoresRequest request
+    ) {
+        PlaceScore scores =
+                placeScoreRepository
+                        .findById(place.getId())
+                        .orElseGet(
+                                () -> new PlaceScore(place)
+                        );
+
+        scores.update(
+                request.getNature(),
+                request.getAttractions(),
+                request.getMilitary(),
+                request.getReligion(),
+                request.getArchitecture(),
+                request.getHistory(),
+                request.getArt(),
+                request.getSouvenirs(),
+                request.getTransportTech(),
+                request.getAccommodation(),
+                request.getFood(),
+                request.getExclusiveFood(),
+                request.getSubcultures()
+        );
+
+        placeScoreRepository.save(scores);
+    }
+
+    private PlaceScoresResponse toScoresResponse(
+            Long placeId
+    ) {
+        PlaceScore scores =
+                placeScoreRepository
+                        .findById(placeId)
+                        .orElseThrow(
+                                () -> new IllegalStateException(
+                                        "Scores not found for place "
+                                                + placeId
+                                )
+                        );
+
+        return PlaceScoresResponse.builder()
+                .nature(scores.getNature())
+                .attractions(scores.getAttractions())
+                .military(scores.getMilitary())
+                .religion(scores.getReligion())
+                .architecture(scores.getArchitecture())
+                .history(scores.getHistory())
+                .art(scores.getArt())
+                .souvenirs(scores.getSouvenirs())
+                .transportTech(
+                        scores.getTransportTech()
+                )
+                .accommodation(
+                        scores.getAccommodation()
+                )
+                .food(scores.getFood())
+                .exclusiveFood(
+                        scores.getExclusiveFood()
+                )
+                .subcultures(
+                        scores.getSubcultures()
+                )
+                .build();
     }
 }
