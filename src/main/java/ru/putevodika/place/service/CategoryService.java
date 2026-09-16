@@ -27,4 +27,17 @@ public class CategoryService {
                 )
                 .toList();
     }
+
+    public List<CategoryResponse> findAllPreferenceSelectable() {
+        return categoryRepository
+                .findAllByActiveTrueAndPreferenceSelectableTrueOrderByNameAsc()
+                .stream()
+                .map(category -> CategoryResponse.builder()
+                        .id(category.getId())
+                        .code(category.getCode())
+                        .name(category.getName())
+                        .build()
+                )
+                .toList();
+    }
 }

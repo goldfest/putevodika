@@ -25,4 +25,9 @@ public class CategoryController {
     public List<CategoryResponse> findAll() {
         return categoryService.findAllActive();
     }
+
+    @GetMapping("/preferences")
+    public List<CategoryResponse> findPreferences() {
+        return categoryService.findAllPreferenceSelectable();
+    }
 }

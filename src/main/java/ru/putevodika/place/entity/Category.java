@@ -35,4 +35,10 @@ public class Category {
             nullable = false
     )
     private boolean active;
+
+    @Column(
+            name = "preference_selectable",
+            nullable = false
+    )
+    private boolean preferenceSelectable;
 }

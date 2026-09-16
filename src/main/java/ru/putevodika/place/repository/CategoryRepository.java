@@ -14,4 +14,12 @@ public interface CategoryRepository
     );
 
     List<Category> findAllByActiveTrueOrderByNameAsc();
+
+    List<Category>
+    findAllByActiveTrueAndPreferenceSelectableTrueOrderByNameAsc();
+
+    Set<Category>
+    findAllByCodeInAndActiveTrueAndPreferenceSelectableTrue(
+            Set<String> codes
+    );
 }

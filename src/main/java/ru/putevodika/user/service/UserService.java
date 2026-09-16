@@ -92,7 +92,7 @@ public class UserService {
                 requestedCodes.isEmpty()
                         ? Set.of()
                         : categoryRepository
-                        .findAllByCodeInAndActiveTrue(
+                        .findAllByCodeInAndActiveTrueAndPreferenceSelectableTrue(
                                 requestedCodes
                         );
 
