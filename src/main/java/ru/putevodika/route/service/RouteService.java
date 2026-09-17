@@ -149,7 +149,7 @@ public class RouteService {
 
         List<Place> places =
                 placeRepository
-                        .findAllByIdInAndActiveTrue(
+                        .findAllByIdInAndActiveTrueAndAvailableForRouteTrue(
                                 requestedIds
                         );
 

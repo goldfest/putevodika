@@ -1,5 +1,6 @@
 package ru.putevodika.place.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Value;
 
@@ -40,4 +41,7 @@ public class PlaceResponse {
     Map<String, Integer> features;
 
     PlaceScoresResponse scores;
+
+    @JsonProperty("available_for_route")
+    boolean availableForRoute;
 }

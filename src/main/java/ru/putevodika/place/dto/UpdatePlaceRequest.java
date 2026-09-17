@@ -1,5 +1,6 @@
 package ru.putevodika.place.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,4 +56,7 @@ public class UpdatePlaceRequest {
     @NotNull
     @Valid
     private PlaceScoresRequest scores;
+
+    @JsonProperty("available_for_route")
+    private boolean availableForRoute = true;
 }

@@ -109,6 +109,10 @@ public class PlaceService {
                 request.getOpeningHours()
         );
 
+        place.updateRouteAvailability(
+                request.isAvailableForRoute()
+        );
+
         categories.forEach(place::addCategory);
 
         Place saved = placeRepository.save(place);
@@ -175,6 +179,9 @@ public class PlaceService {
                 .categories(categories)
                 .sourceType(place.getSourceType().name())
                 .active(place.isActive())
+                .availableForRoute(
+                        place.isAvailableForRoute()
+                )
                 .createdAt(place.getCreatedAt())
                 .updatedAt(place.getUpdatedAt())
                 .visitDurationMinutes(
@@ -451,6 +458,10 @@ public class PlaceService {
         place.updateVisitInfo(
                 request.getVisitDurationMinutes(),
                 request.getOpeningHours()
+        );
+
+        place.updateRouteAvailability(
+                request.isAvailableForRoute()
         );
 
         place.replaceCategories(categories);

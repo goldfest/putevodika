@@ -8,6 +8,7 @@ import java.util.Map;
 
 import java.util.Set;
 import jakarta.validation.Valid;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Getter
 @Setter
@@ -57,4 +58,7 @@ public class CreatePlaceRequest {
     @NotNull
     @Valid
     private PlaceScoresRequest scores;
+
+    @JsonProperty("available_for_route")
+    private boolean availableForRoute = true;
 }

@@ -73,6 +73,12 @@ public class Place {
     private boolean active;
 
     @Column(
+            name = "available_for_route",
+            nullable = false
+    )
+    private boolean availableForRoute;
+
+    @Column(
             name = "created_at",
             nullable = false
     )
@@ -114,6 +120,7 @@ public class Place {
         this.sourceType = sourceType;
         this.externalId = externalId;
         this.active = true;
+        this.availableForRoute = true;
     }
 
 
@@ -172,5 +179,39 @@ public class Place {
 
         this.openingHours =
                 openingHours;
+    }
+
+    public void updateRouteAvailability(
+            boolean availableForRoute
+    ) {
+        this.availableForRoute = availableForRoute;
+    }
+
+    @Column(
+            name = "phone",
+            length = 64
+    )
+    private String phone;
+
+    @Column(
+            name = "website",
+            length = 2048
+    )
+    private String website;
+
+    @Column(
+            name = "email",
+            length = 320
+    )
+    private String email;
+
+    public void updateContacts(
+            String phone,
+            String website,
+            String email
+    ) {
+        this.phone = phone;
+        this.website = website;
+        this.email = email;
     }
 }

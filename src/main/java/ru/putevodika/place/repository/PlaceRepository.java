@@ -144,7 +144,7 @@ public interface PlaceRepository
             @Param("limit") int limit
     );
 
-    List<Place> findAllByIdInAndActiveTrue(
+    List<Place> findAllByIdInAndActiveTrueAndAvailableForRouteTrue(
             Set<Long> ids
     );
 }
