@@ -31,19 +31,13 @@ public class PlaceBatchImportService {
         for (OsmPlaceImportRequest request : requests) {
 
             try {
-                boolean alreadyExists =
-                        placeRepository
-                                .existsBySourceTypeAndExternalId(
-                                        PlaceSourceType.OSM,
-                                        request.getId()
-                                );
+                ImportStatus status =
+                        importWithStatus(request);
 
-                placeImportService.importOne(request);
-
-                if (alreadyExists) {
-                    updated++;
-                } else {
+                if (status == ImportStatus.CREATED) {
                     created++;
+                } else {
+                    updated++;
                 }
 
             } catch (Exception exception) {
@@ -51,10 +45,12 @@ public class PlaceBatchImportService {
                 failures.add(
                         OsmPlaceBatchImportResponse.Failure
                                 .builder()
-                                .id(request.getId())
-                                .error(
-                                        exception.getMessage()
+                                .id(
+                                        request == null
+                                                ? null
+                                                : request.getId()
                                 )
+                                .error(exception.getMessage())
                                 .build()
                 );
             }
@@ -68,5 +64,29 @@ public class PlaceBatchImportService {
                 .failed(failures.size())
                 .failures(failures)
                 .build();
+    }
+
+
+    public ImportStatus importWithStatus(
+            OsmPlaceImportRequest request
+    ) {
+        boolean alreadyExists =
+                placeRepository
+                        .existsBySourceTypeAndExternalId(
+                                PlaceSourceType.OSM,
+                                request.getId()
+                        );
+
+        placeImportService.importOne(request);
+
+        return alreadyExists
+                ? ImportStatus.UPDATED
+                : ImportStatus.CREATED;
+    }
+
+
+    public enum ImportStatus {
+        CREATED,
+        UPDATED
     }
 }

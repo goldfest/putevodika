@@ -2,6 +2,11 @@ spring:
   application:
     name: putevodika-backend
 
+  servlet:
+    multipart:
+      max-file-size: ${OSM_IMPORT_MAX_FILE_SIZE:100MB}
+      max-request-size: ${OSM_IMPORT_MAX_REQUEST_SIZE:110MB}
+
   datasource:
     url: jdbc:postgresql://localhost:5433/putevodika
     username: putevodika
@@ -43,6 +48,8 @@ spring:
 
 server:
   port: 8080
+  error:
+    include-message: always
 
 management:
   endpoints:

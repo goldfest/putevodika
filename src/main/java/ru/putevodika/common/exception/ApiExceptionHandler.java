@@ -21,6 +21,7 @@ import ru.putevodika.route.exception.UnavailableRoutePlaceException;
 import ru.putevodika.routing.exception.RoutingProviderUnavailableException;
 import ru.putevodika.routing.exception.WalkingRouteNotFoundException;
 import ru.putevodika.auth.exception.InvalidRefreshTokenException;
+import ru.putevodika.place.exception.InvalidOsmImportFileException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -334,6 +335,23 @@ public class ApiExceptionHandler {
 
         problemDetail.setTitle(
                 "Сервис маршрутизации недоступен"
+        );
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidOsmImportFileException.class)
+    public ProblemDetail handleInvalidOsmImportFile(
+            InvalidOsmImportFileException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Ошибка импорта OSM-файла"
         );
 
         return problemDetail;

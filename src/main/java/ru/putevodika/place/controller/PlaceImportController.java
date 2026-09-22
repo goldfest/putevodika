@@ -13,6 +13,9 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import ru.putevodika.place.dto.OsmPlaceBatchImportResponse;
 import ru.putevodika.place.service.PlaceBatchImportService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import ru.putevodika.place.service.PlaceFileImportService;
 
 @RestController
 @RequestMapping("/api/v1/admin/places/import")
@@ -28,6 +31,9 @@ public class PlaceImportController {
 
     private final PlaceBatchImportService
             placeBatchImportService;
+
+    private final PlaceFileImportService
+            placeFileImportService;
 
     @PostMapping("/osm")
     @ResponseStatus(HttpStatus.CREATED)
@@ -47,5 +53,17 @@ public class PlaceImportController {
         return placeBatchImportService.importAll(
                 requests
         );
+    }
+
+    @PostMapping(
+            value = "/osm/file",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public OsmPlaceBatchImportResponse importOsmFile(
+            @RequestParam("file")
+            MultipartFile file
+    ) {
+        return placeFileImportService
+                .importFile(file);
     }
 }

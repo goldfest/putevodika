@@ -1,0 +1,22 @@
+package ru.putevodika.place.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class InvalidOsmImportFileException
+        extends RuntimeException {
+
+    public InvalidOsmImportFileException(
+            String message
+    ) {
+        super(message);
+    }
+
+    public InvalidOsmImportFileException(
+            String message,
+            Throwable cause
+    ) {
+        super(message, cause);
+    }
+}
