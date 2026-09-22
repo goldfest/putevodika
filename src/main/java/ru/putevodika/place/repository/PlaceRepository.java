@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 import ru.putevodika.place.entity.Place;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import ru.putevodika.place.entity.PlaceSourceType;
 
 import java.util.List;
 import java.util.Optional;
@@ -146,5 +147,15 @@ public interface PlaceRepository
 
     List<Place> findAllByIdInAndActiveTrueAndAvailableForRouteTrue(
             Set<Long> ids
+    );
+
+    Optional<Place> findBySourceTypeAndExternalId(
+            PlaceSourceType sourceType,
+            String externalId
+    );
+
+    boolean existsBySourceTypeAndExternalId(
+            PlaceSourceType sourceType,
+            String externalId
     );
 }
