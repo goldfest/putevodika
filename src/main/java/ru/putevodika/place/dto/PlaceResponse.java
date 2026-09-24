@@ -38,6 +38,12 @@ public class PlaceResponse {
 
     String openingHours;
 
+    String phone;
+
+    String website;
+
+    String email;
+
     Map<String, Integer> features;
 
     PlaceScoresResponse scores;

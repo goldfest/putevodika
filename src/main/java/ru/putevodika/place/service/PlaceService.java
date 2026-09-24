@@ -190,6 +190,15 @@ public class PlaceService {
                 .openingHours(
                         place.getOpeningHours()
                 )
+                .phone(
+                        place.getPhone()
+                )
+                .website(
+                        place.getWebsite()
+                )
+                .email(
+                        place.getEmail()
+                )
                 .features(features)
                 .scores(
                         toScoresResponse(place.getId())
