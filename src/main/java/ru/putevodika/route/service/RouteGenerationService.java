@@ -8,14 +8,18 @@ import ru.putevodika.route.dto.GenerateRouteRequest;
 import ru.putevodika.route.dto.GeneratedRouteResponse;
 import ru.putevodika.route.dto.RoutePlaceResponse;
 import ru.putevodika.route.dto.RoutePointResponse;
+import ru.putevodika.route.exception.InvalidRouteTimeWindowException;
+import ru.putevodika.route.exception.RouteTimeLimitExceededException;
 import ru.putevodika.routing.client.RoutingPoint;
 import ru.putevodika.routing.dto.WalkingRouteResponse;
 import ru.putevodika.routing.service.RoutingService;
 import ru.putevodika.user.service.UserFeaturePreferenceService;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Service
@@ -48,6 +52,8 @@ public class RouteGenerationService {
             Long userId,
             GenerateRouteRequest request
     ) {
+        validateTimeWindow(request);
+
         Map<String, Integer> preferences =
                 userFeaturePreferenceService
                         .get(userId)
@@ -78,49 +84,40 @@ public class RouteGenerationService {
                         preferences
                 );
 
-        List<RoutingPoint> routingPoints =
-                new ArrayList<>();
-
-        routingPoints.add(
-                new RoutingPoint(
-                        request.start().latitude(),
-                        request.start().longitude()
-                )
-        );
-
-        selectedPlaces.forEach(place ->
-                routingPoints.add(
-                        new RoutingPoint(
-                                place.getLocation().getY(),
-                                place.getLocation().getX()
-                        )
-                )
-        );
-
-        routingPoints.add(
-                new RoutingPoint(
-                        request.finish().latitude(),
-                        request.finish().longitude()
-                )
-        );
-
-        WalkingRouteResponse walkingRoute =
-                routingService.buildWalkingRoute(
-                        routingPoints
+        RoutePlan routePlan =
+                fitIntoTimeWindow(
+                        request,
+                        selectedPlaces
                 );
 
         List<RoutePlaceResponse> places =
                 IntStream.range(
                                 0,
-                                selectedPlaces.size()
+                                routePlan.places().size()
                         )
                         .mapToObj(index ->
                                 toRoutePlaceResponse(
-                                        selectedPlaces.get(index),
+                                        routePlan
+                                                .places()
+                                                .get(index),
                                         index + 1
                                 )
                         )
                         .toList();
+
+        long availableDurationMinutes =
+                Duration.between(
+                                request.startTime(),
+                                request.endTime()
+                        )
+                        .toMinutes();
+
+        long walkingDurationMinutes =
+                secondsToMinutesCeil(
+                        routePlan
+                                .walkingRoute()
+                                .getDurationSeconds()
+                );
 
         return GeneratedRouteResponse.builder()
                 .start(
@@ -143,9 +140,166 @@ public class RouteGenerationService {
                                 )
                                 .build()
                 )
+                .startTime(
+                        request.startTime()
+                )
+                .endTime(
+                        request.endTime()
+                )
+                .availableDurationMinutes(
+                        availableDurationMinutes
+                )
+                .walkingDurationMinutes(
+                        walkingDurationMinutes
+                )
+                .visitDurationMinutes(
+                        routePlan.visitDurationMinutes()
+                )
+                .totalDurationMinutes(
+                        routePlan.totalDurationMinutes()
+                )
                 .places(places)
-                .walkingRoute(walkingRoute)
+                .walkingRoute(
+                        routePlan.walkingRoute()
+                )
                 .build();
+    }
+
+
+    private RoutePlan fitIntoTimeWindow(
+            GenerateRouteRequest request,
+            List<Place> selectedPlaces
+    ) {
+        long availableSeconds =
+                Duration.between(
+                                request.startTime(),
+                                request.endTime()
+                        )
+                        .toSeconds();
+
+        List<Place> places =
+                new ArrayList<>(
+                        selectedPlaces
+                );
+
+        while (true) {
+            WalkingRouteResponse walkingRoute =
+                    buildWalkingRoute(
+                            request,
+                            places
+                    );
+
+            long visitDurationMinutes =
+                    calculateVisitDurationMinutes(
+                            places
+                    );
+
+            double totalDurationSeconds =
+                    walkingRoute.getDurationSeconds()
+                            + visitDurationMinutes * 60.0;
+
+            if (totalDurationSeconds
+                    <= availableSeconds) {
+
+                return new RoutePlan(
+                        List.copyOf(places),
+                        walkingRoute,
+                        visitDurationMinutes,
+                        secondsToMinutesCeil(
+                                totalDurationSeconds
+                        )
+                );
+            }
+
+            if (places.isEmpty()) {
+                throw new RouteTimeLimitExceededException(
+                        Duration.between(
+                                        request.startTime(),
+                                        request.endTime()
+                                )
+                                .toMinutes(),
+                        secondsToMinutesCeil(
+                                walkingRoute
+                                        .getDurationSeconds()
+                        )
+                );
+            }
+
+            places.remove(
+                    places.size() - 1
+            );
+        }
+    }
+
+
+    private WalkingRouteResponse buildWalkingRoute(
+            GenerateRouteRequest request,
+            List<Place> places
+    ) {
+        List<RoutingPoint> routingPoints =
+                new ArrayList<>();
+
+        routingPoints.add(
+                new RoutingPoint(
+                        request.start().latitude(),
+                        request.start().longitude()
+                )
+        );
+
+        places.forEach(place ->
+                routingPoints.add(
+                        new RoutingPoint(
+                                place.getLocation().getY(),
+                                place.getLocation().getX()
+                        )
+                )
+        );
+
+        routingPoints.add(
+                new RoutingPoint(
+                        request.finish().latitude(),
+                        request.finish().longitude()
+                )
+        );
+
+        return routingService.buildWalkingRoute(
+                routingPoints
+        );
+    }
+
+
+    private long calculateVisitDurationMinutes(
+            List<Place> places
+    ) {
+        return places.stream()
+                .map(
+                        Place::getVisitDurationMinutes
+                )
+                .filter(Objects::nonNull)
+                .mapToLong(
+                        Integer::longValue
+                )
+                .sum();
+    }
+
+
+    private void validateTimeWindow(
+            GenerateRouteRequest request
+    ) {
+        if (!request.endTime()
+                .isAfter(request.startTime())) {
+
+            throw new InvalidRouteTimeWindowException();
+        }
+    }
+
+
+    private long secondsToMinutesCeil(
+            double seconds
+    ) {
+        return (long) Math.ceil(
+                seconds / 60.0
+        );
     }
 
 
@@ -258,5 +412,14 @@ public class RouteGenerationService {
                         place.getLocation().getX()
                 )
                 .build();
+    }
+
+
+    private record RoutePlan(
+            List<Place> places,
+            WalkingRouteResponse walkingRoute,
+            long visitDurationMinutes,
+            long totalDurationMinutes
+    ) {
     }
 }

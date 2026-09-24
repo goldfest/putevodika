@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import ru.putevodika.routing.dto.RoutingPointRequest;
 
+import java.time.LocalTime;
+
 public record GenerateRouteRequest(
 
         @NotNull
@@ -12,7 +14,13 @@ public record GenerateRouteRequest(
 
         @NotNull
         @Valid
-        RoutingPointRequest finish
+        RoutingPointRequest finish,
+
+        @NotNull
+        LocalTime startTime,
+
+        @NotNull
+        LocalTime endTime
 
 ) {
 }
