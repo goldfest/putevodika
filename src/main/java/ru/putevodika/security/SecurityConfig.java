@@ -222,6 +222,13 @@ public class SecurityConfig {
                 return headerToken;
             }
 
+            if (isPublicEndpoint(
+                    request.getMethod(),
+                    servletPath
+            )) {
+                return null;
+            }
+
             Cookie[] cookies =
                     request.getCookies();
 
@@ -242,6 +249,61 @@ public class SecurityConfig {
                     .findFirst()
                     .orElse(null);
         };
+    }
+
+    private boolean isPublicEndpoint(
+            String method,
+            String servletPath
+    ) {
+
+        if (HttpMethod.GET.matches(method)) {
+
+            if ("/api/v1/auth/csrf"
+                    .equals(servletPath)
+                    || "/api/v1/auth/password-reset/validate"
+                    .equals(servletPath)
+                    || "/api/v1/ping"
+                    .equals(servletPath)
+                    || "/actuator/health"
+                    .equals(servletPath)
+                    || "/api/v1/categories"
+                    .equals(servletPath)
+                    || "/api/v1/features"
+                    .equals(servletPath)) {
+
+                return true;
+            }
+
+            String placePrefix =
+                    "/api/v1/places/";
+
+            if (servletPath.startsWith(
+                    placePrefix
+            )) {
+
+                String remainingPath =
+                        servletPath.substring(
+                                placePrefix.length()
+                        );
+
+                return !remainingPath.isBlank()
+                        && !remainingPath.contains("/");
+            }
+        }
+
+        if (HttpMethod.POST.matches(method)) {
+
+            return "/api/v1/auth/register"
+                    .equals(servletPath)
+                    || "/api/v1/auth/login"
+                    .equals(servletPath)
+                    || "/api/v1/auth/password-reset/request"
+                    .equals(servletPath)
+                    || "/api/v1/auth/password-reset/confirm"
+                    .equals(servletPath);
+        }
+
+        return false;
     }
 
     @Bean
