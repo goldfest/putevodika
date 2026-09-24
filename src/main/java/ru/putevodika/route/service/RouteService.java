@@ -26,6 +26,9 @@ import ru.putevodika.route.repository.SavedRouteRepository;
 import ru.putevodika.user.entity.UserAccount;
 import ru.putevodika.user.exception.UserNotFoundException;
 import ru.putevodika.user.repository.UserRepository;
+import ru.putevodika.routing.client.RoutingPoint;
+import ru.putevodika.routing.dto.WalkingRouteResponse;
+import ru.putevodika.routing.service.RoutingService;
 
 import java.util.*;
 import java.util.function.Function;
@@ -55,6 +58,8 @@ public class RouteService {
     private final GeometryFactory
             geometryFactory;
 
+    private final RoutingService routingService;
+
 
     @Transactional
     public RouteResponse create(
@@ -79,6 +84,12 @@ public class RouteService {
                         request.getPlaceIds()
                 );
 
+        List<Place> orderedPlaces =
+                request.getPlaceIds()
+                        .stream()
+                        .map(places::get)
+                        .toList();
+
         Point startPoint =
                 createPoint(
                         request.getStartLatitude(),
@@ -91,12 +102,47 @@ public class RouteService {
                         request.getFinishLongitude()
                 );
 
+        WalkingRouteResponse walkingRoute =
+                buildWalkingRoute(
+                        request,
+                        orderedPlaces
+                );
+
+        int walkingDistanceMeters =
+                (int) Math.round(
+                        walkingRoute.getDistanceMeters()
+                );
+
+        int walkingDurationSeconds =
+                (int) Math.ceil(
+                        walkingRoute.getDurationSeconds()
+                );
+
+        long visitDurationMinutes =
+                calculateVisitDurationMinutes(
+                        orderedPlaces
+                );
+
+        int totalDurationMinutes =
+                (int) Math.ceil(
+                        (
+                                walkingRoute.getDurationSeconds()
+                                        + visitDurationMinutes * 60.0
+                        ) / 60.0
+                );
+
         SavedRoute route =
                 new SavedRoute(
                         user,
                         startPoint,
                         finishPoint
                 );
+
+        route.updateMetrics(
+                walkingDistanceMeters,
+                walkingDurationSeconds,
+                totalDurationMinutes
+        );
 
         SavedRoute savedRoute =
                 routeRepository.save(route);
@@ -305,6 +351,52 @@ public class RouteService {
                 .routeId(routeId)
                 .rating((int) saved.getValue())
                 .build();
+    }
+
+    private WalkingRouteResponse buildWalkingRoute(
+            SaveRouteRequest request,
+            List<Place> places
+    ) {
+        List<RoutingPoint> points =
+                new ArrayList<>();
+
+        points.add(
+                new RoutingPoint(
+                        request.getStartLatitude(),
+                        request.getStartLongitude()
+                )
+        );
+
+        places.forEach(place ->
+                points.add(
+                        new RoutingPoint(
+                                place.getLocation().getY(),
+                                place.getLocation().getX()
+                        )
+                )
+        );
+
+        points.add(
+                new RoutingPoint(
+                        request.getFinishLatitude(),
+                        request.getFinishLongitude()
+                )
+        );
+
+        return routingService.buildWalkingRoute(
+                points
+        );
+    }
+
+
+    private long calculateVisitDurationMinutes(
+            List<Place> places
+    ) {
+        return places.stream()
+                .map(Place::getVisitDurationMinutes)
+                .filter(Objects::nonNull)
+                .mapToLong(Integer::longValue)
+                .sum();
     }
 
     private RouteResponse toResponse(
