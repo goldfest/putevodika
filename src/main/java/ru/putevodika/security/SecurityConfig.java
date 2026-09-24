@@ -28,6 +28,12 @@ import java.util.List;
 @EnableConfigurationProperties(SecurityWebProperties.class)
 public class SecurityConfig {
 
+    private static final String REFRESH_ENDPOINT =
+            "/api/v1/auth/refresh";
+
+    private static final String LOGOUT_ENDPOINT =
+            "/api/v1/auth/logout";
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -194,10 +200,21 @@ public class SecurityConfig {
 
     @Bean
     public BearerTokenResolver bearerTokenResolver() {
+
         DefaultBearerTokenResolver headerResolver =
                 new DefaultBearerTokenResolver();
 
         return request -> {
+
+            String servletPath =
+                    request.getServletPath();
+
+            if (REFRESH_ENDPOINT.equals(servletPath)
+                    || LOGOUT_ENDPOINT.equals(servletPath)) {
+
+                return null;
+            }
+
             String headerToken =
                     headerResolver.resolve(request);
 
@@ -205,7 +222,8 @@ public class SecurityConfig {
                 return headerToken;
             }
 
-            Cookie[] cookies = request.getCookies();
+            Cookie[] cookies =
+                    request.getCookies();
 
             if (cookies == null) {
                 return null;
@@ -218,7 +236,8 @@ public class SecurityConfig {
                     )
                     .map(Cookie::getValue)
                     .filter(value ->
-                            value != null && !value.isBlank()
+                            value != null
+                                    && !value.isBlank()
                     )
                     .findFirst()
                     .orElse(null);
@@ -290,4 +309,5 @@ public class SecurityConfig {
 
         return converter;
     }
+
 }
