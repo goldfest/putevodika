@@ -27,26 +27,54 @@ public class OsrmClient {
         this.restClient = restClient;
     }
 
-
     public OsrmRouteResult buildWalkingRoute(
             double startLatitude,
             double startLongitude,
             double finishLatitude,
             double finishLongitude
     ) {
+        return buildWalkingRoute(
+                List.of(
+                        new RoutingPoint(
+                                startLatitude,
+                                startLongitude
+                        ),
+                        new RoutingPoint(
+                                finishLatitude,
+                                finishLongitude
+                        )
+                )
+        );
+    }
+
+    public OsrmRouteResult buildWalkingRoute(
+            List<RoutingPoint> points
+    ) {
+        if (points == null || points.size() < 2) {
+            throw new IllegalArgumentException(
+                    "Для построения маршрута нужны минимум две точки"
+            );
+        }
+
+        String coordinates =
+                points.stream()
+                        .map(point ->
+                                point.longitude()
+                                        + ","
+                                        + point.latitude()
+                        )
+                        .collect(
+                                Collectors.joining(";")
+                        );
 
         try {
-
             OsrmRouteApiResponse response =
                     restClient
                             .get()
                             .uri(uriBuilder ->
                                     uriBuilder
-                                            .path(
-                                                    "/route/v1/foot/" +
-                                                            "{startLon},{startLat};" +
-                                                            "{finishLon},{finishLat}"
-                                            )
+                                            .path("/route/v1/foot/")
+                                            .path(coordinates)
                                             .queryParam(
                                                     "overview",
                                                     "full"
@@ -55,25 +83,18 @@ public class OsrmClient {
                                                     "geometries",
                                                     "geojson"
                                             )
-                                            .build(
-                                                    startLongitude,
-                                                    startLatitude,
-                                                    finishLongitude,
-                                                    finishLatitude
-                                            )
+                                            .build()
                             )
                             .retrieve()
                             .body(
                                     OsrmRouteApiResponse.class
                             );
 
-
             if (response == null) {
                 throw new RoutingProviderUnavailableException(
                         "OSRM вернул пустой ответ"
                 );
             }
-
 
             if (!"Ok".equals(response.code())
                     || response.routes() == null
@@ -86,17 +107,14 @@ public class OsrmClient {
                 );
             }
 
-
             OsrmRouteApiResponse.Route route =
                     response.routes().getFirst();
-
 
             if (route.geometry() == null) {
                 throw new RoutingProviderUnavailableException(
                         "OSRM не вернул геометрию маршрута"
                 );
             }
-
 
             return new OsrmRouteResult(
                     route.distance(),
@@ -113,7 +131,6 @@ public class OsrmClient {
         } catch (RestClientResponseException exception) {
 
             handleHttpError(exception);
-
             throw exception;
 
         } catch (RestClientException exception) {

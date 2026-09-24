@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.putevodika.common.dto.PageResponse;
 import ru.putevodika.route.dto.*;
+import ru.putevodika.route.service.RouteGenerationService;
 import ru.putevodika.route.service.RouteService;
 
 @RestController
@@ -27,6 +28,9 @@ import ru.putevodika.route.service.RouteService;
 public class RouteController {
 
     private final RouteService routeService;
+
+    private final RouteGenerationService
+            routeGenerationService;
 
 
     @PostMapping
@@ -112,6 +116,19 @@ public class RouteController {
     ) {
         return Long.valueOf(
                 jwt.getSubject()
+        );
+    }
+
+    @PostMapping("/generate")
+    public GeneratedRouteResponse generate(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid
+            @RequestBody
+            GenerateRouteRequest request
+    ) {
+        return routeGenerationService.generate(
+                currentUserId(jwt),
+                request
         );
     }
 }

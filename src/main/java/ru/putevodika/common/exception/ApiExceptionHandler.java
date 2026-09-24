@@ -22,6 +22,8 @@ import ru.putevodika.routing.exception.RoutingProviderUnavailableException;
 import ru.putevodika.routing.exception.WalkingRouteNotFoundException;
 import ru.putevodika.auth.exception.InvalidRefreshTokenException;
 import ru.putevodika.place.exception.InvalidOsmImportFileException;
+import ru.putevodika.route.exception.InvalidRouteTimeWindowException;
+import ru.putevodika.route.exception.RouteTimeLimitExceededException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -352,6 +354,50 @@ public class ApiExceptionHandler {
 
         problemDetail.setTitle(
                 "Ошибка импорта OSM-файла"
+        );
+
+        return problemDetail;
+    }
+    @ExceptionHandler(InvalidRouteTimeWindowException.class)
+    public ProblemDetail handleInvalidRouteTimeWindow(
+            InvalidRouteTimeWindowException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Некорректное время маршрута"
+        );
+
+        return problemDetail;
+    }
+
+
+    @ExceptionHandler(RouteTimeLimitExceededException.class)
+    public ProblemDetail handleRouteTimeLimitExceeded(
+            RouteTimeLimitExceededException exception
+    ) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        exception.getMessage()
+                );
+
+        problemDetail.setTitle(
+                "Маршрут не помещается по времени"
+        );
+
+        problemDetail.setProperty(
+                "availableDurationMinutes",
+                exception.getAvailableDurationMinutes()
+        );
+
+        problemDetail.setProperty(
+                "minimumRequiredDurationMinutes",
+                exception.getMinimumRequiredDurationMinutes()
         );
 
         return problemDetail;
