@@ -158,4 +158,27 @@ public interface PlaceRepository
             PlaceSourceType sourceType,
             String externalId
     );
+
+    @NativeQuery("""
+        SELECT p.*
+        FROM place p
+        WHERE p.active = TRUE
+          AND p.available_for_route = TRUE
+          AND ST_DWithin(
+                p.location::geography,
+                ST_SetSRID(
+                    ST_MakePoint(:longitude, :latitude),
+                    4326
+                )::geography,
+                :radiusMeters
+          )
+        ORDER BY RANDOM()
+        LIMIT :limit
+        """)
+    List<Place> findRandomAvailableForRouteNearby(
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            @Param("radiusMeters") int radiusMeters,
+            @Param("limit") int limit
+    );
 }

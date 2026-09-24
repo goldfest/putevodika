@@ -9,6 +9,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.putevodika.auth.config.PasswordResetProperties;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.web.util.HtmlUtils;
+
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
@@ -36,40 +42,56 @@ public class PasswordResetMailService {
                         .build()
                         .toUriString();
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
+        try {
+            MimeMessage message =
+                    mailSender.createMimeMessage();
 
-        message.setFrom(
-                properties.mailFrom()
-        );
-        message.setTo(email);
-        message.setSubject(
-                "Восстановление доступа — Путеводика"
-        );
-        message.setText(
-                """
-                Вы запросили восстановление доступа к Путеводике.
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            StandardCharsets.UTF_8.name()
+                    );
 
-                Перейдите по ссылке, чтобы установить новый пароль:
-                %s
+            helper.setFrom(properties.mailFrom());
+            helper.setTo(email);
+            helper.setSubject(
+                    "Путеводика: Восстановление пароля"
+            );
 
-                Ссылка действует %d минут и может быть использована только один раз.
+            helper.setText(
+                    buildResetEmailHtml(resetUrl),
+                    true
+            );
 
-                Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
-                """
-                        .formatted(
-                                resetUrl,
-                                properties
-                                        .tokenTtl()
-                                        .toMinutes()
-                        )
-        );
+            mailSender.send(message);
 
-        sendSafely(
-                message,
-                email,
-                "password-reset"
-        );
+        } catch (MessagingException | MailException exception) {
+            log.error(
+                    "Не удалось отправить письмо типа password-reset на {}",
+                    email,
+                    exception
+            );
+        }
+    }
+
+    private String buildResetEmailHtml(
+            String resetUrl
+    ) {
+        String safeUrl =
+                HtmlUtils.htmlEscape(resetUrl);
+
+        return """
+            Для восстановления пароля перейдите по ссылке ниже:<br><br>
+            <a href="%s">Восстановить пароль</a><br><br>
+            Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.<br><br>
+            С заботой,<br>
+            Команда Путеводики<br>
+            <pre>{\\__/}
+            ( • .•)
+            / > ❤️</pre>
+            Это письмо сгенерировано автоматически. Не отвечайте на него.
+            """
+                .formatted(safeUrl);
     }
 
     @Async("passwordResetExecutor")
