@@ -1,0 +1,108 @@
+services:
+
+  postgres:
+    image: postgis/postgis:18-3.6-alpine
+    container_name: putevodika-postgres
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-putevodika}
+      POSTGRES_USER: ${POSTGRES_USER:-putevodika}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+
+    volumes:
+      - putevodika-postgres-data:/var/lib/postgresql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-putevodika} -d ${POSTGRES_DB:-putevodika}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  redis:
+    image: redis:8-alpine
+    container_name: putevodika-redis
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
+    restart: unless-stopped
+
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v26.8.0-debian
+    container_name: putevodika-osrm
+
+    command:
+      - osrm-routed
+      - --algorithm
+      - mld
+      - /data/${OSRM_DATASET:-ulyanovsk_oblast-latest}.osrm
+
+    volumes:
+      - ./osrm-data:/data:ro
+
+    restart: unless-stopped
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: putevodika-backend
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-putevodika}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-putevodika}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      MAIL_SMTP_STARTTLS_REQUIRED: ${MAIL_SMTP_STARTTLS_REQUIRED:-true}
+      MAIL_FROM: ${MAIL_FROM}
+
+      OSRM_BASE_URL: http://osrm:5000
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      PASSWORD_RESET_URL: ${PASSWORD_RESET_URL:-https://putevodika.ru/reset-password}
+
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-Lax}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://putevodika.ru}
+
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8081}:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      osrm:
+        condition: service_started
+
+    restart: unless-stopped
+
+
+volumes:
+  putevodika-postgres-data:
