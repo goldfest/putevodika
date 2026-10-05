@@ -15,6 +15,8 @@ import ru.putevodika.common.dto.PageResponse;
 import ru.putevodika.route.dto.*;
 import ru.putevodika.route.service.RouteGenerationService;
 import ru.putevodika.route.service.RouteService;
+import ru.putevodika.route.generation.dto.GeneticAlgorithmInput;
+import ru.putevodika.route.generation.service.GeneticAlgorithmInputPreparationService;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -31,6 +33,9 @@ public class RouteController {
 
     private final RouteGenerationService
             routeGenerationService;
+
+    private final GeneticAlgorithmInputPreparationService
+            geneticAlgorithmInputPreparationService;
 
 
     @PostMapping
@@ -127,6 +132,19 @@ public class RouteController {
             GenerateRouteRequest request
     ) {
         return routeGenerationService.generate(
+                currentUserId(jwt),
+                request
+        );
+    }
+
+    @PostMapping("/generate/input")
+    public GeneticAlgorithmInput prepareGeneticAlgorithmInput(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid
+            @RequestBody
+            GenerateRouteRequest request
+    ) {
+        return geneticAlgorithmInputPreparationService.prepare(
                 currentUserId(jwt),
                 request
         );

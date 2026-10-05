@@ -181,4 +181,45 @@ public interface PlaceRepository
             @Param("radiusMeters") int radiusMeters,
             @Param("limit") int limit
     );
+
+    @NativeQuery("""
+    SELECT p.*
+    FROM place p
+    WHERE p.active = TRUE
+      AND p.available_for_route = TRUE
+      AND p.visit_duration_minutes IS NOT NULL
+      AND EXISTS (
+            SELECT 1
+            FROM place_score ps
+            WHERE ps.place_id = p.id
+      )
+      AND ST_DWithin(
+            p.location::geography,
+            ST_SetSRID(
+                ST_MakePoint(
+                    :longitude,
+                    :latitude
+                ),
+                4326
+            )::geography,
+            :radiusMeters
+      )
+    ORDER BY ST_Distance(
+        p.location::geography,
+        ST_SetSRID(
+            ST_MakePoint(
+                :longitude,
+                :latitude
+            ),
+            4326
+        )::geography
+    )
+    LIMIT :limit
+    """)
+    List<Place> findRouteCandidatesNearby(
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            @Param("radiusMeters") int radiusMeters,
+            @Param("limit") int limit
+    );
 }
