@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Administrative, read-only access across all owners; does not modify routes. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -66,7 +65,6 @@ public class AdminRouteService {
                     cb.greaterThanOrEqualTo(root.get("createdAt"), lower));
         }
         if (dateTo != null) {
-            // Upper bound is exclusive: includes the entire selected UTC day.
             Instant upper = dateTo.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
             filters.add((root, query, cb) ->
                     cb.lessThan(root.get("createdAt"), upper));
@@ -83,7 +81,6 @@ public class AdminRouteService {
             try {
                 numericId = Long.parseLong(cleanSearch);
             } catch (NumberFormatException ignored) {
-                // Non-numeric text is searched only in the owner's name and email.
             }
             Long exactId = numericId;
             filters.add((root, query, cb) -> {

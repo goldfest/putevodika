@@ -47,8 +47,6 @@ public class AdminLoginController {
             return "admin/login";
         }
 
-        // Не доверяем X-Forwarded-For из запроса: remoteAddr должен
-        // корректно определяться инфраструктурой доверенного reverse-proxy.
         String remoteAddress = request.getRemoteAddr();
         String email = loginForm.getEmail();
 

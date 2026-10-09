@@ -1,104 +1,152 @@
-/* Продление административной JWT-сессии через существующий /api/v1/auth/refresh.
- * Никаких токенов в localStorage: лишь время последнего успешного обновления. */
+
 'use strict';
 (() => {
-    const ENDPOINT = '/api/v1/auth/refresh';
+    const CSRF_URL = '/api/v1/auth/csrf';
+    const REFRESH_URL = '/api/v1/auth/refresh';
     const REFRESH_INTERVAL_MS = 7 * 60 * 1000;
     const SHARED_TIMESTAMP_KEY = 'putevodika-admin-last-refresh';
-    let lastCheck = Date.now();
-    let inflight = null;
-    let warningShown = false;
+    const LOCK_NAME = 'putevodika-admin-refresh';
 
-    const getCookie = name => {
-        const prefix = name + '=';
-        const part = document.cookie.split('; ').find(part => part.startsWith(prefix));
-        return part ? decodeURIComponent(part.slice(prefix.length)) : '';
-    };
-    const lastSharedRefresh = () => {
-        try { return Number(localStorage.getItem(SHARED_TIMESTAMP_KEY) || '0'); }
-        catch (_) { return 0; }
-    };
-    const updateSharedRefresh = () => {
-        try { localStorage.setItem(SHARED_TIMESTAMP_KEY, String(Date.now())); }
-        catch (_) { /* Хранилище может быть недоступно. */ }
-    };
+    let lastLocalSuccess = 0;
+    let pending = null;
+    let warningElement = null;
 
-    function showWarning() {
-        if (warningShown) return;
-        warningShown = true;
-        const notice = document.createElement('div');
-        notice.setAttribute('role', 'alert');
-        notice.className = 'admin-session-warning';
-        notice.textContent = 'Не удалось продлить сессию. Не закрывайте страницу: скопируйте несохранённые данные, затем войдите снова.';
-        const link = document.createElement('a');
-        link.href = '/admin/login';
-        link.textContent = 'Перейти ко входу';
-        notice.append(' ', link);
-        document.body.prepend(notice);
-    }
-
-    async function refreshImpl(force = false) {
-        const doRefresh = async () => {
-            // Если другая вкладка только что обновила общие cookie, не ротируем refresh-токен повторно.
-            const graceMs = force ? 10 * 1000 : REFRESH_INTERVAL_MS;
-            if (Date.now() - lastSharedRefresh() < graceMs) return true;
-            const csrf = getCookie('XSRF-TOKEN') ||
-                document.querySelector('input[name="_csrf"]')?.value;
-            if (!csrf) return false;
-            try {
-                const response = await fetch(ENDPOINT, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    headers: { 'X-XSRF-TOKEN': csrf }
-                });
-                if (!response.ok) return false;
-                updateSharedRefresh();
-                lastCheck = Date.now();
-                return true;
-            } catch (_) {
-                return false;
-            }
-        };
-        if (navigator.locks?.request) {
-            return navigator.locks.request('putevodika-admin-refresh', doRefresh);
+    function lastSuccessfulRefresh() {
+        let shared = 0;
+        try {
+            shared = Number(localStorage.getItem(SHARED_TIMESTAMP_KEY) || '0');
+        } catch (_) {
+            // Например, браузер заблокировал localStorage.
         }
-        return doRefresh();
+        if (!Number.isFinite(shared) || shared < 0 || shared > Date.now()) {
+            shared = 0;
+        }
+        return Math.max(shared, lastLocalSuccess);
     }
 
-    function refresh(force = false) {
-        if (inflight) return inflight;
-        inflight = refreshImpl(force).finally(() => { inflight = null; });
-        return inflight;
+    function recordSuccess() {
+        lastLocalSuccess = Date.now();
+        try {
+            localStorage.setItem(SHARED_TIMESTAMP_KEY, String(lastLocalSuccess));
+        } catch (_) {
+            // Сессия не зависит от localStorage.
+        }
+        if (warningElement) {
+            warningElement.remove();
+            warningElement = null;
+        }
     }
 
-    // Автообновление, пока админка открыта.
-    setInterval(async () => {
-        if (document.hidden) return;
-        if (!await refresh()) showWarning();
+    function showWarning(status) {
+        if (warningElement) return;
+        const notice = document.createElement('div');
+        notice.className = 'admin-session-warning';
+        notice.setAttribute('role', 'status');
+        notice.textContent = 'Не удалось автоматически продлить сессию' +
+            (status ? ' (HTTP ' + status + ')' : '') +
+            '. Просмотр и отправка форм не блокируются. Если возникнет ошибка доступа, сохраните данные и войдите снова.';
+        const loginLink = document.createElement('a');
+        loginLink.href = '/admin/login';
+        loginLink.textContent = 'Страница входа';
+        notice.append(' ', loginLink);
+        document.body.prepend(notice);
+        warningElement = notice;
+    }
+
+    async function readCsrfToken() {
+        // Принудительно обращаемся к серверу: токен может ещё не быть
+        // создан при GET-запросе HTML-страницы админки.
+        const response = await fetch(CSRF_URL, {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!response.ok) {
+            return { token: null, status: response.status };
+        }
+        const data = await response.json();
+        const token = typeof data.token === 'string' ? data.token : null;
+        return { token, status: response.status };
+    }
+
+    async function attemptRefresh() {
+        try {
+            const csrf = await readCsrfToken();
+            if (!csrf.token) {
+                return { ok: false, status: csrf.status };
+            }
+            const response = await fetch(REFRESH_URL, {
+                method: 'POST',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { 'X-XSRF-TOKEN': csrf.token }
+            });
+            if (!response.ok) {
+                return { ok: false, status: response.status };
+            }
+            recordSuccess();
+            return { ok: true, status: response.status };
+        } catch (_) {
+            // Ошибка сети или недоступный backend; формы не блокируем.
+            return { ok: false, status: null };
+        }
+    }
+
+    function refreshIfDue() {
+        if (pending) return pending;
+
+        const run = async () => {
+            if (Date.now() - lastSuccessfulRefresh() < REFRESH_INTERVAL_MS) {
+                return { ok: true, skipped: true };
+            }
+            // Разные вкладки не должны одновременно ротировать refresh-токен.
+            const work = async () => {
+                // После получения межвкладочной блокировки проверим время ещё раз.
+                if (Date.now() - lastSuccessfulRefresh() < REFRESH_INTERVAL_MS) {
+                    return { ok: true, skipped: true };
+                }
+                return attemptRefresh();
+            };
+            if (navigator.locks && typeof navigator.locks.request === 'function') {
+                return navigator.locks.request(LOCK_NAME, work);
+            }
+            return work();
+        };
+
+        pending = run()
+            .then(result => {
+                if (!result.ok) {
+                    console.warn('Putevodika Admin: автоматическое продление не удалось',
+                        result.status === null ? '(сеть)' : '(HTTP ' + result.status + ')');
+                    showWarning(result.status);
+                }
+                return result;
+            })
+            .catch(() => {
+                showWarning(null);
+                return { ok: false, status: null };
+            })
+            .finally(() => {
+                pending = null;
+            });
+        return pending;
+    }
+
+    // Первая проверка при входе на страницу; далее — раз в семь минут.
+    // При переходах между страницами сработает общий timestamp и новый
+    // POST /refresh не будет выполняться без необходимости.
+    void refreshIfDue();
+    setInterval(() => {
+        if (!document.hidden) void refreshIfDue();
     }, REFRESH_INTERVAL_MS);
 
-    // Фоновая вкладка может не получать таймеры: обновим при возврате.
-    document.addEventListener('visibilitychange', async () => {
-        if (!document.hidden && Date.now() - lastCheck >= REFRESH_INTERVAL_MS) {
-            if (!await refresh()) showWarning();
-        }
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) void refreshIfDue();
+    });
+    window.addEventListener('focus', () => {
+        if (!document.hidden) void refreshIfDue();
     });
 
-    // Перед сохранением формы обеспечим действительный access-токен.
-    document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(form => {
-        if (form.action.includes('/api/v1/auth/admin-logout')) return;
-        form.addEventListener('submit', async event => {
-            event.preventDefault();
-            const submitButton = event.submitter;
-            if (submitButton) submitButton.disabled = true;
-            const ok = await refresh(true);
-            if (ok) {
-                HTMLFormElement.prototype.submit.call(form);
-            } else {
-                if (submitButton) submitButton.disabled = false;
-                showWarning();
-            }
-        });
-    });
+    // Здесь намеренно нет обработчиков submit: они должны работать штатно.
 })();

@@ -23,7 +23,6 @@ import java.util.List;
 public class AdminAuditLogService {
     private final AdminAuditLogRepository repository;
 
-    /** No passwords, JWTs, raw requests, personal information or file contents. */
     @Transactional
     public void record(String action, String subjectType, String subjectId, String details) {
         Long actor = currentActorId();
@@ -62,7 +61,6 @@ public class AdminAuditLogService {
     private String currentClientIp() {
         if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
             HttpServletRequest request = attrs.getRequest();
-            // Rely only on container/proxy-trusted remote address, never incoming X-Forwarded-For.
             return request.getRemoteAddr();
         }
         return null;

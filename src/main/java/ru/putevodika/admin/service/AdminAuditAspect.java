@@ -4,18 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.putevodika.place.dto.CreatePlaceRequest;
 import ru.putevodika.place.dto.PlaceResponse;
 import ru.putevodika.place.dto.UpdatePlaceRequest;
 import ru.putevodika.user.dto.ChangeUserRoleRequest;
 
-/** Records successful service operations. The advice runs after the transaction proxy. */
 @Aspect
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 @Slf4j
 public class AdminAuditAspect {
@@ -61,7 +57,6 @@ public class AdminAuditAspect {
         try {
             logService.record(action, type, id, message);
         } catch (RuntimeException exception) {
-            // A successful business operation must not appear to fail due to a secondary audit DB error.
             log.error("Не удалось сохранить аудит {} {} {}", action, type, id, exception);
         }
     }
