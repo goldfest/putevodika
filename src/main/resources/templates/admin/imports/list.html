@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>История импортов | Putevodika</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin.css}"><link rel="stylesheet" th:href="@{/admin/css/admin-history.css}">
+</head><body><div class="admin-layout">
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div class="main-wrapper"><div th:replace="~{admin/fragments/header :: header}"></div>
+<main class="main-content">
+<header class="history-heading"><div><h1>История OSM-импортов</h1><p>Файлы, отправленные через админку и REST API.</p></div>
+<a class="history-button" th:href="@{/admin/import/osm}">Загрузить JSON</a></header>
+<form method="get" th:action="@{/admin/imports}" class="history-filters">
+<label>Статус <select name="status">
+<option value="" th:selected="${selectedStatus == ''}">Все</option>
+<option value="RUNNING" th:selected="${selectedStatus == 'RUNNING'}">Выполняется</option>
+<option value="COMPLETED" th:selected="${selectedStatus == 'COMPLETED'}">Успешно</option>
+<option value="COMPLETED_WITH_ERRORS" th:selected="${selectedStatus == 'COMPLETED_WITH_ERRORS'}">Частично</option>
+<option value="FAILED" th:selected="${selectedStatus == 'FAILED'}">Прервано</option>
+</select></label><button type="submit" class="history-button">Применить</button>
+<a class="history-link" th:href="@{/admin/imports}">Сбросить</a></form>
+<section class="history-panel">
+<p class="history-muted">Запусков: <strong th:text="${totalElements}">0</strong></p>
+<div class="history-table-wrap"><table class="history-table"><thead>
+<tr><th>ID</th><th>Файл</th><th>Начало (UTC)</th><th>Статус</th><th>Всего</th><th>Создано</th><th>Обновлено</th><th>Ошибок</th><th></th></tr>
+</thead><tbody><tr th:each="job : ${jobs}">
+<td th:text="${job.id}">1</td><td class="history-break" th:text="${job.fileName}">—</td>
+<td th:text="${job.startedAtDisplay}">—</td>
+<td><span class="history-pill" th:text="${job.status}">—</span></td>
+<td th:text="${job.totalCount}">0</td><td th:text="${job.createdCount}">0</td>
+<td th:text="${job.updatedCount}">0</td><td th:text="${job.failedCount}">0</td>
+<td><a class="history-link" th:href="@{/admin/imports/{id}(id=${job.id})}">Подробнее →</a></td>
+</tr><tr th:if="${#lists.isEmpty(jobs)}"><td colspan="9">История пока пуста.</td></tr>
+</tbody></table></div></section>
+<nav class="history-pagination" th:if="${totalPages > 1}" aria-label="Страницы истории">
+<a th:each="p : ${pages}" th:href="@{/admin/imports(page=${p},status=${selectedStatus})}"
+   th:classappend="${p == page} ? ' current' : ''" th:text="${p + 1}">1</a></nav>
+</main></div></div></body></html>

@@ -1,32 +1,19 @@
 <header xmlns:th="http://www.thymeleaf.org"
         th:fragment="header"
         class="topbar">
-
-    <div class="topbar-title"
-         th:text="${pageTitle}">
-        Главная панель
-    </div>
-
+    <div class="topbar-title" th:text="${pageTitle}">Главная панель</div>
     <div class="topbar-user">
-
-        <span class="user-role">
-            ADMIN
-        </span>
-
-        <div class="user-avatar">
-            A
-        </div>
-
-        <form th:action="@{/api/v1/auth/admin-logout}"
-              method="post">
-
-            <button type="submit"
-                    class="logout-button">
-                Выйти
-            </button>
-
+        <span class="user-role">ADMIN</span>
+        <div class="user-avatar">A</div>
+        <form th:action="@{/api/v1/auth/admin-logout}" method="post">
+            <button type="submit" class="logout-button">Выйти</button>
         </form>
-
     </div>
-
+    <style>
+        .admin-session-warning { position: relative; z-index: 20; padding: 14px 24px;
+            background: #FFF1D8; border-bottom: 1px solid #DFAC50; color: #1D1E33;
+            font: 14px/1.5 Arial, sans-serif; }
+        .admin-session-warning a { color: #036C50; font-weight: 700; margin-left: 8px; }
+    </style>
+    <script th:src="@{/admin/js/admin-session.js}" defer></script>
 </header>

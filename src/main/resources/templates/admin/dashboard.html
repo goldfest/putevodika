@@ -1,27 +1,71 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} + ' | Putevodika'">Админ-панель</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Putevodika'">Главная | Putevodika</title>
     <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
-    <link rel="stylesheet" th:href="@{/admin/css/admin-places.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-dashboard.css}">
 </head>
-<body><div class="admin-layout">
+<body>
+<div class="admin-layout">
     <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
-    <div class="main-wrapper"><div th:replace="~{admin/fragments/header :: header}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
         <main class="main-content">
-            <div class="page-heading"><h1>Панель управления</h1>
-                <p>Управление пользователями и каталогом туристических объектов Putevodika.</p></div>
-            <div class="dashboard-grid">
-                <section class="dashboard-card"><div class="card-icon">👥</div>
-                    <h2>Пользователи</h2><p>Поиск, роли, блокировка и восстановление учётных записей.</p>
-                    <a class="places-button" th:href="@{/admin/users}">Открыть пользователей →</a></section>
-                <section class="dashboard-card"><div class="card-icon">📍</div>
-                    <h2>Туристические объекты</h2><p>Категории, scores, features, координаты и доступность для маршрутов.</p>
-                    <a class="places-button" th:href="@{/admin/places}">Открыть объекты →</a></section>
-                <section class="dashboard-card"><div class="card-icon">📥</div>
-                    <h2>Импорт OSM</h2><p>Загрузка подготовленных JSON-массивов с отчётом о созданных, обновлённых и отклонённых объектах.</p>
-                    <a class="places-button" th:href="@{/admin/import/osm}">Открыть импорт →</a></section>
+            <div class="page-heading">
+                <h1>Обзор Putevodika</h1>
+                <p>Текущие показатели приложения. Значения загружаются из PostgreSQL.</p>
             </div>
+
+            <section class="overview-grid" aria-label="Статистика пользователей и объектов">
+                <article class="overview-stat">
+                    <span>Пользователей всего</span>
+                    <strong th:text="${stats.usersTotal()}">0</strong>
+                    <small th:text="|Активных: ${stats.usersActive()}|">Активных: 0</small>
+                    <a th:href="@{/admin/users}">Управление пользователями →</a>
+                </article>
+                <article class="overview-stat">
+                    <span>Администраторов</span>
+                    <strong th:text="${stats.administrators()}">0</strong>
+                    <small>Аккаунты с ролью ADMIN</small>
+                    <a th:href="@{/admin/users(role='ADMIN')}">Посмотреть администраторов →</a>
+                </article>
+                <article class="overview-stat">
+                    <span>Туристических объектов</span>
+                    <strong th:text="${stats.placesTotal()}">0</strong>
+                    <small th:text="|Активных: ${stats.placesActive()}|">Активных: 0</small>
+                    <a th:href="@{/admin/places}">Открыть каталог →</a>
+                </article>
+                <article class="overview-stat">
+                    <span>Объектов из OSM</span>
+                    <strong th:text="${stats.osmPlaces()}">0</strong>
+                    <small>Включая отключённые объекты</small>
+                    <a th:href="@{/admin/places(sourceType='OSM')}">Показать OSM-объекты →</a>
+                </article>
+                <article class="overview-stat">
+                    <span>Доступно для маршрутов</span>
+                    <strong th:text="${stats.routeAvailablePlaces()}">0</strong>
+                    <small>Активные объекты с available_for_route = true</small>
+                    <a th:href="@{/admin/places(active='true')}">Посмотреть активные объекты →</a>
+                </article>
+                <article class="overview-stat">
+                    <span>Сохранённых маршрутов</span>
+                    <strong th:text="${stats.savedRoutes()}">0</strong>
+                    <small>Количество записей в saved_route</small>
+                </article>
+            </section>
+
+            <section class="overview-actions" aria-label="Быстрые действия">
+                <h2>Быстрые действия</h2>
+                <div class="overview-actions-row">
+                    <a th:href="@{/admin/places/new}">+ Создать туристический объект</a>
+                    <a th:href="@{/admin/import/osm}">Импортировать OSM JSON →</a>
+                    <a th:href="@{/admin/users}">Управлять пользователями →</a>
+                </div>
+            </section>
         </main>
     </div>
-</div></body></html>
+</div>
+</body>
+</html>

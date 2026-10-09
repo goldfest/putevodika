@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Журнал действий | Putevodika</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+<link rel="stylesheet" th:href="@{/admin/css/admin-history.css}">
+</head>
+<body><div class="admin-layout">
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div class="main-wrapper">
+<div th:replace="~{admin/fragments/header :: header}"></div>
+<main class="main-content">
+<header class="history-heading"><div><h1>Журнал действий</h1><p>Изменения, выполненные через административные сервисы.</p></div></header>
+<form method="get" th:action="@{/admin/audit}" class="history-filters">
+<label>Действие
+<select name="action"><option value="">Все действия</option>
+<option th:each="item : ${actions}" th:value="${item}" th:text="${item}" th:selected="${item == selectedAction}"></option>
+</select></label>
+<label>Сущность
+<select name="type">
+<option value="" th:selected="${selectedType == ''}">Все</option>
+<option value="USER" th:selected="${selectedType == 'USER'}">Пользователь</option>
+<option value="PLACE" th:selected="${selectedType == 'PLACE'}">Туристический объект</option>
+<option value="IMPORT" th:selected="${selectedType == 'IMPORT'}">Импорт</option>
+</select></label>
+<button type="submit" class="history-button">Применить</button>
+<a class="history-link" th:href="@{/admin/audit}">Сбросить</a>
+</form>
+<section class="history-panel">
+<p class="history-muted">Записей: <strong th:text="${totalElements}">0</strong></p>
+<div class="history-table-wrap"><table class="history-table">
+<thead><tr><th>Время (UTC)</th><th>Администратор</th><th>Действие</th><th>Сущность</th><th>ID</th><th>Описание</th><th>IP</th></tr></thead>
+<tbody>
+<tr th:each="entry : ${entries}">
+<td th:text="${entry.createdAtDisplay}">—</td>
+<td th:text="${entry.actorUserId == null ? 'SYSTEM' : entry.actorUserId}">—</td>
+<td><span class="history-pill" th:text="${entry.action}">—</span></td>
+<td th:text="${entry.subjectType}">—</td>
+<td th:text="${entry.subjectId ?: '—'}">—</td>
+<td th:text="${entry.details ?: '—'}">—</td>
+<td th:text="${entry.clientIp ?: '—'}">—</td>
+</tr>
+<tr th:if="${#lists.isEmpty(entries)}"><td colspan="7">Записей по выбранным фильтрам пока нет.</td></tr>
+</tbody></table></div>
+</section>
+<nav class="history-pagination" th:if="${totalPages > 1}" aria-label="Страницы журнала">
+<a th:each="p : ${pages}" th:href="@{/admin/audit(page=${p}, action=${selectedAction}, type=${selectedType})}"
+   th:classappend="${p == page} ? ' current' : ''" th:text="${p + 1}">1</a>
+</nav>
+</main></div></div>
+</body></html>

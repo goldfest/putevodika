@@ -8,28 +8,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.putevodika.admin.service.TrackedPlaceFileImportService;
 import ru.putevodika.place.dto.OsmPlaceBatchImportResponse;
 import ru.putevodika.place.exception.InvalidOsmImportFileException;
-import ru.putevodika.place.service.PlaceFileImportService;
-
 import java.util.List;
 import java.util.Locale;
 
-/** HTML-administration for the existing prepared OSM JSON importer. */
 @Slf4j
 @Controller
 @RequestMapping("/admin/import/osm")
 @RequiredArgsConstructor
 public class AdminOsmImportController {
-
     private static final int MAX_VISIBLE_FAILURES = 200;
-
-    private final PlaceFileImportService placeFileImportService;
+    private final TrackedPlaceFileImportService trackedFileImportService;
 
     @GetMapping
     public String form(Model model) {
@@ -38,40 +31,28 @@ public class AdminOsmImportController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String upload(
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            Model model,
-            HttpServletResponse response
-    ) {
+    public String upload(@RequestParam(value = "file", required = false) MultipartFile file,
+                         Model model, HttpServletResponse response) {
         preparePage(model);
-        // A POST result is never cached; refreshing the result may re-submit the file.
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
-
         if (file == null || file.isEmpty()) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
             model.addAttribute("error", "Выберите непустой JSON-файл для импорта.");
             return "admin/import/osm";
         }
-
         String originalName = file.getOriginalFilename();
-        if (originalName == null
-                || !originalName.toLowerCase(Locale.ROOT).endsWith(".json")) {
+        if (originalName == null || !originalName.toLowerCase(Locale.ROOT).endsWith(".json")) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
             model.addAttribute("error", "Поддерживаются только файлы .json; ZIP-архивы загрузить нельзя.");
             return "admin/import/osm";
         }
-
         model.addAttribute("fileName", safeDisplayName(originalName));
-
         try {
-            OsmPlaceBatchImportResponse report = placeFileImportService.importFile(file);
+            OsmPlaceBatchImportResponse report = trackedFileImportService.importFile(file);
             List<OsmPlaceBatchImportResponse.Failure> failures = report.getFailures();
-            if (failures == null) {
-                failures = List.of();
-            }
+            if (failures == null) failures = List.of();
             model.addAttribute("report", report);
-            model.addAttribute("visibleFailures", failures.stream()
-                    .limit(MAX_VISIBLE_FAILURES).toList());
+            model.addAttribute("visibleFailures", failures.stream().limit(MAX_VISIBLE_FAILURES).toList());
             model.addAttribute("moreFailures", Math.max(0, failures.size() - MAX_VISIBLE_FAILURES));
         } catch (InvalidOsmImportFileException exception) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
@@ -83,7 +64,6 @@ public class AdminOsmImportController {
                     + "Часть ранее обработанных объектов могла сохраниться. "
                     + "Проверьте журнал backend перед повторной загрузкой.");
         }
-
         return "admin/import/osm";
     }
 
@@ -99,9 +79,7 @@ public class AdminOsmImportController {
     }
 
     private String shortMessage(String message) {
-        if (message == null || message.isBlank()) {
-            return "Не удалось прочитать JSON-файл импорта.";
-        }
+        if (message == null || message.isBlank()) return "Не удалось прочитать JSON-файл импорта.";
         return message.length() > 400 ? message.substring(0, 400) + "…" : message;
     }
 }

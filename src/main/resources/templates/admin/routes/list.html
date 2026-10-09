@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Сохранённые маршруты | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-routes.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <div class="page-heading">
+                <h1>Сохранённые маршруты</h1>
+                <p>Просмотр маршрутов всех пользователей. Данные доступны только администраторам.</p>
+            </div>
+
+            <section class="route-panel" aria-labelledby="route-list-heading">
+                <h2 id="route-list-heading">Поиск и фильтры</h2>
+                <form class="route-filters" method="get" th:action="@{/admin/routes}">
+                    <div class="route-field route-field--search">
+                        <label for="route-search">Поиск</label>
+                        <input id="route-search" type="search" name="q" maxlength="100"
+                               th:value="${q}" placeholder="ID маршрута, email или имя пользователя">
+                    </div>
+                    <div class="route-field">
+                        <label for="route-user-id">ID пользователя</label>
+                        <input id="route-user-id" type="number" name="userId" min="1" step="1"
+                               th:value="${userId}" placeholder="Все пользователи">
+                    </div>
+                    <div class="route-field">
+                        <label for="route-date-from">Дата от (UTC)</label>
+                        <input id="route-date-from" type="date" name="dateFrom" th:value="${dateFrom}">
+                    </div>
+                    <div class="route-field">
+                        <label for="route-date-to">Дата до (UTC)</label>
+                        <input id="route-date-to" type="date" name="dateTo" th:value="${dateTo}">
+                    </div>
+                    <div class="route-form-actions">
+                        <button type="submit" class="route-button">Найти</button>
+                        <a th:href="@{/admin/routes}" class="route-button route-button--outline">Сбросить</a>
+                    </div>
+                </form>
+                <div th:if="${filterError}" class="route-alert route-alert--error"
+                     th:text="${filterError}" role="alert"></div>
+                <div class="route-results-meta">
+                    <span>Найдено маршрутов: <strong th:text="${totalElements}">0</strong></span>
+                    <span th:if="${totalPages > 0}" th:text="|Страница ${page + 1} из ${totalPages}|">Страница</span>
+                </div>
+                <div class="route-table-scroll">
+                    <table class="route-table">
+                        <thead>
+                        <tr><th>ID</th><th>Пользователь</th><th>Туристических объектов</th>
+                            <th>Пешая дистанция</th><th>Общее время</th><th>Создан (UTC)</th><th>Действие</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="route : ${routes}">
+                            <td th:text="${route.id}">1</td>
+                            <td>
+                                <a class="route-link" th:href="@{/admin/users/{id}(id=${route.userId})}"
+                                   th:text="${route.userName}">Пользователь</a>
+                                <div class="route-muted route-break" th:text="${route.userEmail}">mail@example.com</div>
+                                <div class="route-muted" th:text="|ID ${route.userId}|">ID</div>
+                            </td>
+                            <td th:text="${route.stopCount}">0</td>
+                            <td th:text="${route.distance}">—</td>
+                            <td th:text="${route.duration}">—</td>
+                            <td th:text="${route.createdAt}">—</td>
+                            <td><a class="route-link" th:href="@{/admin/routes/{id}(id=${route.id})}">Открыть →</a></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(routes)}">
+                            <td colspan="7" class="route-empty">Маршруты по заданным условиям не найдены.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <nav class="route-pages" th:if="${totalPages > 1}" aria-label="Страницы списка маршрутов">
+                    <a class="route-page" th:if="${page > 0}"
+                       th:href="@{/admin/routes(page=${page - 1},q=${q},userId=${userId},dateFrom=${dateFrom},dateTo=${dateTo})}">←</a>
+                    <a class="route-page" th:each="number : ${pageNumbers}"
+                       th:classappend="${number == page} ? ' route-page--current' : ''"
+                       th:attr="aria-current=${number == page ? 'page' : null}"
+                       th:href="@{/admin/routes(page=${number},q=${q},userId=${userId},dateFrom=${dateFrom},dateTo=${dateTo})}"
+                       th:text="${number + 1}">1</a>
+                    <a class="route-page" th:if="${page < totalPages - 1}"
+                       th:href="@{/admin/routes(page=${page + 1},q=${q},userId=${userId},dateFrom=${dateFrom},dateTo=${dateTo})}">→</a>
+                </nav>
+            </section>
+        </main>
+    </div>
+</div>
+</body>
+</html>

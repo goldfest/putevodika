@@ -1,0 +1,37 @@
+<!doctype html><html lang="ru" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Результат импорта | Putevodika</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin.css}"><link rel="stylesheet" th:href="@{/admin/css/admin-history.css}">
+</head><body><div class="admin-layout"><div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div class="main-wrapper"><div th:replace="~{admin/fragments/header :: header}"></div>
+<main class="main-content">
+<a class="history-link" th:href="@{/admin/imports}">← Вернуться к истории</a>
+<header class="history-heading"><div><h1 th:text="|Импорт № ${job.id}|">Импорт</h1>
+<p class="history-break" th:text="${job.fileName}">Файл</p></div>
+<span class="history-pill" th:text="${job.status}">—</span></header>
+<section class="history-stats">
+<div><span>Всего объектов</span><strong th:text="${job.totalCount}">0</strong></div>
+<div><span>Создано</span><strong th:text="${job.createdCount}">0</strong></div>
+<div><span>Обновлено</span><strong th:text="${job.updatedCount}">0</strong></div>
+<div><span>Ошибок</span><strong th:text="${job.failedCount}">0</strong></div>
+</section>
+<section class="history-panel">
+<h2>Информация о запуске</h2><dl class="history-details">
+<div><dt>Инициатор (ID)</dt><dd th:text="${job.actorUserId ?: 'SYSTEM'}">—</dd></div>
+<div><dt>Начало (UTC)</dt><dd th:text="${job.startedAtDisplay}">—</dd></div>
+<div><dt>Окончание (UTC)</dt><dd th:text="${job.finishedAtDisplay}">—</dd></div>
+<div><dt>Размер (байт)</dt><dd th:text="${job.fileSizeBytes}">0</dd></div>
+</dl>
+<p class="history-warning" th:if="${job.status.name() == 'FAILED'}">
+Импорт прерван. Важно: отдельные объекты могли быть сохранены до ошибки, их количество может не отображаться в итоговых счётчиках.
+</p>
+<p class="history-warning" th:if="${job.errorMessage != null}" th:text="${job.errorMessage}"></p>
+</section>
+<section class="history-panel" th:if="${not #lists.isEmpty(job.failures)}">
+<h2>Ошибки объектов (первые 200)</h2>
+<div class="history-table-wrap"><table class="history-table">
+<thead><tr><th>OSM ID</th><th>Ошибка</th></tr></thead><tbody>
+<tr th:each="failure : ${job.failures}"><td th:text="${failure.objectId}">—</td>
+<td class="history-break" th:text="${failure.errorText}">—</td></tr>
+</tbody></table></div></section>
+</main></div></div></body></html>

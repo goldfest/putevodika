@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Маршрут не найден | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-routes.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <section class="route-panel">
+                <h1>Маршрут не найден</h1>
+                <p class="route-muted">Маршрута с указанным ID нет в базе данных.</p>
+                <a class="route-button" th:href="@{/admin/routes}">К списку маршрутов</a>
+            </section>
+        </main>
+    </div>
+</div>
+</body>
+</html>
