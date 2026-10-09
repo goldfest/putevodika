@@ -134,7 +134,7 @@ public class AdminUsersPageController {
         request.setRole(role);
         try {
             adminUserService.changeRole(Long.valueOf(jwt.getSubject()), id, request);
-            redirectAttributes.addFlashAttribute("success", "Роль пользователя обновлена. Его прежние сессии завершены.");
+            redirectAttributes.addFlashAttribute("success", "Роль пользователя сохранена.");
         } catch (SelfAdministrationException exception) {
             redirectAttributes.addFlashAttribute("error", "Нельзя изменять собственную роль.");
         } catch (UserNotFoundException exception) {

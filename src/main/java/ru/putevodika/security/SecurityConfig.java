@@ -271,6 +271,10 @@ public class SecurityConfig {
             String servletPath =
                     request.getServletPath();
 
+            if ("/admin/login".equals(servletPath)) {
+                return null;
+            }
+
             if (REFRESH_ENDPOINT.equals(servletPath)
                     || LOGOUT_ENDPOINT.equals(servletPath)
                     || "/api/v1/auth/admin-logout".equals(servletPath)) {
