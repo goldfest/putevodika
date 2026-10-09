@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Карточка пользователя | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-users.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <a class="users-back" th:href="@{/admin/users}">← К списку пользователей</a>
+            <div class="page-heading">
+                <h1 th:text="${user.displayName}">Имя пользователя</h1>
+                <p th:text="${user.email}">email@example.com</p>
+            </div>
+
+            <div th:if="${success}" class="users-alert users-alert--success"
+                 role="status" th:text="${success}"></div>
+            <div th:if="${error}" class="users-alert users-alert--error"
+                 role="alert" th:text="${error}"></div>
+
+            <div class="users-detail-grid">
+                <section class="users-panel" aria-label="Профиль пользователя">
+                    <h2 class="users-panel-heading">Информация о пользователе</h2>
+                    <dl class="users-description-list">
+                        <div><dt>ID</dt><dd th:text="${user.id}">1</dd></div>
+                        <div><dt>Имя</dt><dd th:text="${user.displayName}">Имя</dd></div>
+                        <div><dt>Email</dt><dd class="users-break" th:text="${user.email}">email@example.com</dd></div>
+                        <div><dt>Роль</dt><dd><span class="users-badge users-badge--role" th:text="${user.role}">USER</span></dd></div>
+                        <div><dt>Статус</dt><dd><span class="users-badge"
+                            th:classappend="${user.active} ? ' users-badge--active' : ' users-badge--blocked'"
+                            th:text="${user.active} ? 'Активен' : 'Заблокирован'">Активен</span></dd></div>
+                        <div><dt>Создан</dt><dd th:text="${createdAt}">—</dd></div>
+                        <div><dt>Изменён</dt><dd th:text="${updatedAt}">—</dd></div>
+                        <div><dt>Онбординг</dt><dd th:text="${user.onboardingCompleted} ? 'Завершён' : 'Не завершён'">—</dd></div>
+                        <div><dt>Дата онбординга</dt><dd th:text="${onboardingAt}">—</dd></div>
+                    </dl>
+                    <h3 class="users-subheading">Предпочтительные категории</h3>
+                    <p th:if="${#sets.isEmpty(user.preferredCategories)}" class="users-muted">Пока не выбраны</p>
+                    <div class="users-tags" th:unless="${#sets.isEmpty(user.preferredCategories)}">
+                        <span class="users-tag" th:each="code : ${user.preferredCategories}"
+                              th:text="${code}">CATEGORY</span>
+                    </div>
+                </section>
+
+                <section class="users-panel" aria-label="Управление доступом">
+                    <h2 class="users-panel-heading">Управление доступом</h2>
+                    <p th:if="${isSelf}" class="users-hint">
+                        Это ваша учётная запись. Свою роль и активность нельзя менять из админки.
+                    </p>
+                    <div th:unless="${isSelf}">
+                        <form class="users-control-form"
+                              th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post">
+                            <label for="newRole">Роль пользователя</label>
+                            <select id="newRole" name="role" required>
+                                <option value="USER" th:selected="${user.role == 'USER'}">USER — пользователь</option>
+                                <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">ADMIN — администратор</option>
+                            </select>
+                            <button class="users-button" type="submit"
+                                    onclick="return confirm('Изменить роль пользователя? Его текущие сессии будут завершены при смене роли.')">
+                                Сохранить роль
+                            </button>
+                        </form>
+
+                        <div class="users-separator"></div>
+                        <form th:if="${user.active}"
+                              th:action="@{/admin/users/{id}/deactivate(id=${user.id})}" method="post">
+                            <button class="users-button users-button--danger" type="submit"
+                                    onclick="return confirm('Заблокировать пользователя и завершить его сессии?')">
+                                Заблокировать пользователя
+                            </button>
+                        </form>
+                        <form th:unless="${user.active}"
+                              th:action="@{/admin/users/{id}/activate(id=${user.id})}" method="post">
+                            <button class="users-button" type="submit"
+                                    onclick="return confirm('Восстановить доступ пользователю?')">
+                                Разблокировать пользователя
+                            </button>
+                        </form>
+                        <p class="users-hint">Блокировка запрещает вход и отзывает действующие токены. Разблокировка не восстанавливает прежние сессии.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

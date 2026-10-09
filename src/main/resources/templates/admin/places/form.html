@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Putevodika'">Редактор | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-places.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <a class="places-link places-back" th:href="${editing} ? @{/admin/places/{id}(id=${placeId})} : @{/admin/places}">← Назад</a>
+            <div class="page-heading">
+                <h1 th:text="${editing} ? 'Редактирование объекта' : 'Новый туристический объект'">Редактор</h1>
+                <p>Категории могут быть множественными. Scores оцениваются от 0 до 1, features — от 0 до 5.</p>
+            </div>
+
+            <form class="places-edit-form" method="post" th:object="${placeForm}"
+                  th:action="${editing} ? @{/admin/places/{id}/edit(id=${placeId})} : @{/admin/places/new}">
+                <div class="places-alert places-alert--error" th:if="${#fields.hasAnyErrors()}" role="alert">
+                    <strong>Проверьте форму:</strong>
+                    <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul>
+                </div>
+
+                <section class="places-panel places-info-panel">
+                    <h2>Основная информация</h2>
+                    <div class="places-form-grid">
+                        <div class="places-field places-field--wide">
+                            <label for="name">Название *</label>
+                            <input id="name" type="text" th:field="*{name}" maxlength="255" required>
+                        </div>
+                        <div class="places-field places-field--wide">
+                            <label for="description">Описание</label>
+                            <textarea id="description" th:field="*{description}" rows="5"></textarea>
+                        </div>
+                        <div class="places-field places-field--wide">
+                            <label for="address">Фактический адрес</label>
+                            <input id="address" type="text" th:field="*{address}" maxlength="500" placeholder="Можно не указывать, если неизвестен">
+                        </div>
+                        <div class="places-field">
+                            <label for="latitude">Широта *</label>
+                            <input id="latitude" type="number" step="any" min="-90" max="90" th:field="*{latitude}" required>
+                        </div>
+                        <div class="places-field">
+                            <label for="longitude">Долгота *</label>
+                            <input id="longitude" type="number" step="any" min="-180" max="180" th:field="*{longitude}" required>
+                        </div>
+                        <div class="places-field">
+                            <label for="visitDurationMinutes">Продолжительность посещения, мин</label>
+                            <input id="visitDurationMinutes" type="number" min="1" max="1440" step="1" th:field="*{visitDurationMinutes}">
+                        </div>
+                        <div class="places-field">
+                            <label for="openingHours">Часы работы</label>
+                            <input id="openingHours" type="text" maxlength="255" th:field="*{openingHours}" placeholder="Например, Mo-Fr 10:00-18:00">
+                        </div>
+                        <div class="places-field">
+                            <label for="phone">Телефон</label>
+                            <input id="phone" type="text" maxlength="64" th:field="*{phone}">
+                        </div>
+                        <div class="places-field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" maxlength="320" th:field="*{email}">
+                        </div>
+                        <div class="places-field places-field--wide">
+                            <label for="website">Веб-сайт</label>
+                            <input id="website" type="text" maxlength="2048" th:field="*{website}" placeholder="https://example.org">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="places-panel places-info-panel">
+                    <h2>Категории *</h2>
+                    <p class="places-hint">Выберите одну или несколько действующих категорий.</p>
+                    <div class="places-checkbox-grid">
+                        <label class="places-option" th:each="category : ${categories}">
+                            <input type="checkbox" th:field="*{categories}" th:value="${category.code}">
+                            <span><strong th:text="${category.name}">Категория</strong>
+                                  <small th:text="${category.code}">CODE</small></span>
+                        </label>
+                    </div>
+                    <p class="places-muted" th:if="${#lists.isEmpty(categories)}">Нет активных категорий. Создание объекта невозможно до заполнения справочника.</p>
+                </section>
+
+                <section class="places-panel places-info-panel">
+                    <h2>Характеристики features (0–5)</h2>
+                    <p class="places-hint">«Не задано» сохраняет отсутствие характеристики. Ноль — явно заданная нулевая оценка.</p>
+                    <div class="places-form-grid">
+                        <div class="places-field" th:each="feature : ${featureCatalog}">
+                            <label th:for="|feature-${feature.id}|" th:text="${feature.name}">Характеристика</label>
+                            <select th:id="|feature-${feature.id}|"
+                                    th:attr="name=${'featureValues[' + feature.code + ']'}">
+                                <option value="" th:selected="${placeForm.featureValues[feature.code] == null}">Не задано</option>
+                                <option th:each="level : ${featureLevels}" th:value="${level}" th:text="${level}"
+                                        th:selected="${placeForm.featureValues[feature.code] == level}">0</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="places-panel places-info-panel">
+                    <h2>Scores — тематическая оценка объекта</h2>
+                    <p class="places-hint">Все 13 показателей обязательны. Диапазон от 0.000 до 1.000; шаг 0.001.</p>
+                    <div class="places-form-grid">
+                        <div class="places-field">
+    <label for="score-nature">Природа</label>
+    <input id="score-nature" type="number" min="0" max="1" step="0.001" th:field="*{scores.nature}" required>
+</div>
+<div class="places-field">
+    <label for="score-attractions">Развлечения</label>
+    <input id="score-attractions" type="number" min="0" max="1" step="0.001" th:field="*{scores.attractions}" required>
+</div>
+<div class="places-field">
+    <label for="score-military">Военная тематика</label>
+    <input id="score-military" type="number" min="0" max="1" step="0.001" th:field="*{scores.military}" required>
+</div>
+<div class="places-field">
+    <label for="score-religion">Религия</label>
+    <input id="score-religion" type="number" min="0" max="1" step="0.001" th:field="*{scores.religion}" required>
+</div>
+<div class="places-field">
+    <label for="score-architecture">Архитектура</label>
+    <input id="score-architecture" type="number" min="0" max="1" step="0.001" th:field="*{scores.architecture}" required>
+</div>
+<div class="places-field">
+    <label for="score-history">История</label>
+    <input id="score-history" type="number" min="0" max="1" step="0.001" th:field="*{scores.history}" required>
+</div>
+<div class="places-field">
+    <label for="score-art">Искусство</label>
+    <input id="score-art" type="number" min="0" max="1" step="0.001" th:field="*{scores.art}" required>
+</div>
+<div class="places-field">
+    <label for="score-souvenirs">Сувениры</label>
+    <input id="score-souvenirs" type="number" min="0" max="1" step="0.001" th:field="*{scores.souvenirs}" required>
+</div>
+<div class="places-field">
+    <label for="score-transportTech">Техника и транспорт</label>
+    <input id="score-transportTech" type="number" min="0" max="1" step="0.001" th:field="*{scores.transportTech}" required>
+</div>
+<div class="places-field">
+    <label for="score-accommodation">Проживание</label>
+    <input id="score-accommodation" type="number" min="0" max="1" step="0.001" th:field="*{scores.accommodation}" required>
+</div>
+<div class="places-field">
+    <label for="score-food">Еда</label>
+    <input id="score-food" type="number" min="0" max="1" step="0.001" th:field="*{scores.food}" required>
+</div>
+<div class="places-field">
+    <label for="score-exclusiveFood">Особенная еда</label>
+    <input id="score-exclusiveFood" type="number" min="0" max="1" step="0.001" th:field="*{scores.exclusiveFood}" required>
+</div>
+<div class="places-field">
+    <label for="score-subcultures">Субкультуры</label>
+    <input id="score-subcultures" type="number" min="0" max="1" step="0.001" th:field="*{scores.subcultures}" required>
+</div>
+                    </div>
+                </section>
+
+                <section class="places-panel places-info-panel">
+                    <h2>Использование в маршрутах</h2>
+                    <label class="places-option places-option--switch">
+                        <input type="checkbox" th:field="*{availableForRoute}">
+                        <span><strong>Доступен для построения маршрутов</strong>
+                            <small>При выключении объект остаётся в каталоге, но исключается из маршрутов.</small></span>
+                    </label>
+                </section>
+
+                <div class="places-form-actions">
+                    <button type="submit" class="places-button" th:text="${editing} ? 'Сохранить изменения' : 'Создать объект'">Сохранить</button>
+                    <a class="places-button places-button--outline" th:href="${editing} ? @{/admin/places/{id}(id=${placeId})} : @{/admin/places}">Отмена</a>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+</body>
+</html>

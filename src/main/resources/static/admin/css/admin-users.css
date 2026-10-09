@@ -1,0 +1,83 @@
+/* Дополнительные стили раздела управления пользователями.
+   Используются существующие цвета UI Kit из admin.css. */
+
+.users-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    min-width: 0;
+}
+
+.users-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+}
+.users-field {display: flex; flex-direction: column; gap: 8px; min-width: 155px;}
+.users-field--search {flex: 1; min-width: 220px;}
+.users-field label, .users-control-form label {font-size: 13px; font-weight: 600;}
+.users-field input, .users-field select, .users-control-form select {
+    border: 1px solid var(--border); border-radius: 9px; min-height: 44px;
+    padding: 10px 13px; background: #fff; color: var(--text);
+    font: inherit; font-size: 14px; width: 100%;
+}
+.users-field input:focus-visible, .users-field select:focus-visible,
+.users-control-form select:focus-visible {outline: 2px solid var(--primary); outline-offset: 2px;}
+.users-actions {display: flex; gap: 8px; align-items: center;}
+.users-button {
+    display: inline-flex; justify-content: center; align-items: center; text-align: center;
+    min-height: 44px; padding: 10px 18px; border: 1px solid transparent;
+    border-radius: 9px; background: var(--primary); color: var(--text);
+    font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.users-button:hover {filter: brightness(0.95);}
+.users-button--light {border-color: var(--border); background: #fff;}
+.users-button--danger {background: #fff0ee; border-color: #ffc3b9; color: #a92c20;}
+.users-results-meta {display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:13px; margin:24px 0 12px;}
+.users-results-meta strong {color: var(--text);}
+.users-table-scroll {overflow-x: auto;}
+.users-table {width:100%; border-collapse:collapse; text-align:left; min-width:730px;}
+.users-table th, .users-table td {border-bottom:1px solid var(--border); padding:15px 13px; font-size:13px; vertical-align:middle;}
+.users-table thead th {font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);}
+.users-table tbody tr:hover {background:#f8fafb;}
+.users-name {font-size:14px; font-weight:700; margin-bottom:5px;}
+.users-email {overflow-wrap:anywhere;}
+.users-muted {color:var(--muted); font-size:13px;}
+.users-badge {display:inline-flex; align-items:center; border-radius:100px; padding:7px 10px; font-size:12px; font-weight:600; white-space:nowrap;}
+.users-badge--role {background:#edf2ff; color:#3d4a80;}
+.users-badge--active {background:#e3f8f0; color:#087653;}
+.users-badge--blocked {background:#ffefec; color:#a92c20;}
+.users-link, .users-back {color:#036c50; text-decoration:none; font-size:13px; font-weight:700;}
+.users-link:hover, .users-back:hover {text-decoration:underline;}
+.users-table-action {text-align:right; white-space:nowrap;}
+.users-empty {text-align:center; color:var(--muted); padding:40px 15px !important;}
+.users-pagination {display:flex; gap:8px; flex-wrap:wrap; margin-top:20px; justify-content:center;}
+.users-page {min-width:37px; min-height:37px; padding:9px 12px; border:1px solid var(--border); border-radius:9px; color:var(--text); text-decoration:none; text-align:center; font-size:13px;}
+.users-page:hover {border-color:var(--primary);}
+.users-page--active {background:var(--primary); border-color:var(--primary); font-weight:700;}
+.users-alert {margin-top:20px; border-radius:9px; padding:14px 16px; font-size:14px;}
+.users-alert--success {background:#e3f8f0; border:1px solid #9ce4c8; color:#087653;}
+.users-alert--error {background:#ffefec; border:1px solid #ffb0a2; color:#a92c20;}
+.users-visually-hidden {position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+.users-back {display:inline-block; margin-bottom:14px;}
+.users-detail-grid {display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:22px; align-items:start;}
+.users-detail-grid .users-panel {margin-top:18px;}
+.users-panel-heading {font-size:18px; margin:0 0 25px;}
+.users-subheading {font-size:15px; margin:25px 0 12px;}
+.users-description-list {margin:0;}
+.users-description-list > div {display:grid; grid-template-columns:175px minmax(0,1fr); gap:12px; padding:14px 0; border-bottom:1px solid var(--border);}
+.users-description-list dt {font-size:13px; color:var(--muted);}
+.users-description-list dd {margin:0; font-size:14px; font-weight:500;}
+.users-break {overflow-wrap:anywhere;}
+.users-tags {display:flex; flex-wrap:wrap; gap:8px;}
+.users-tag {border-radius:20px; background:#e3f8f0; padding:8px 12px; font-size:12px; color:#036c50; font-weight:600;}
+.users-control-form {display:flex; flex-direction:column; align-items:flex-start; gap:12px;}
+.users-control-form select {max-width:100%;}
+.users-control-form .users-button {margin-top:5px;}
+.users-separator {height:1px; background:var(--border); margin:24px 0;}
+.users-hint {font-size:13px; line-height:1.6; color:var(--muted);}
+@media(max-width:1100px) {.users-detail-grid {grid-template-columns:1fr;}}
+@media(max-width:700px) {.users-panel {padding:16px;} .users-field, .users-field--search {min-width:100%;} .users-actions {width:100%;} .users-actions .users-button {flex:1;} .users-description-list > div {grid-template-columns:1fr;gap:6px;} }

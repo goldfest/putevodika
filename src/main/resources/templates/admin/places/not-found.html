@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Объект не найден | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-places.css}">
+</head>
+<body><div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper"><div th:replace="~{admin/fragments/header :: header}"></div>
+    <main class="main-content"><section class="places-panel places-info-panel">
+        <h1>Объект не найден</h1>
+        <p>Возможно, объект был удалён из базы или его идентификатор указан неверно.</p>
+        <a class="places-button" th:href="@{/admin/places}">Вернуться к каталогу</a>
+    </section></main></div>
+</div></body></html>

@@ -20,6 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.putevodika.auth.service.AuthCookieService;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +43,32 @@ public class SecurityConfig {
             BearerTokenResolver bearerTokenResolver,
             CookieCsrfTokenRepository csrfTokenRepository
     ) throws Exception {
+
+        AuthenticationEntryPoint apiEntryPoint =
+                new BearerTokenAuthenticationEntryPoint();
+
+        AuthenticationEntryPoint webEntryPoint =
+                (request, response, exception) -> {
+
+                    String path = request.getServletPath();
+
+                    // Запрос к HTML-админке
+                    if ("/admin".equals(path)
+                            || path.startsWith("/admin/")) {
+
+                        response.sendRedirect(
+                                request.getContextPath() + "/admin/login"
+                        );
+
+                        return;
+                    }
+
+                    apiEntryPoint.commence(
+                            request,
+                            response,
+                            exception
+                    );
+                };
 
         CsrfTokenRequestAttributeHandler csrfHandler =
                 new CsrfTokenRequestAttributeHandler();
@@ -100,6 +128,31 @@ public class SecurityConfig {
 
                                 .requestMatchers(
                                         "/api/v1/admin/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/admin/login",
+                                        "/admin/css/**"
+                                )
+                                .permitAll()
+
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/admin/login"
+                                )
+                                .permitAll()
+
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/auth/admin-logout"
+                                )
+                                .permitAll()
+
+                                .requestMatchers(
+                                        "/admin",
+                                        "/admin/**"
                                 )
                                 .hasRole("ADMIN")
 
@@ -165,8 +218,17 @@ public class SecurityConfig {
                                 .authenticated()
                 )
 
+                .exceptionHandling(exceptions ->
+                        exceptions.authenticationEntryPoint(
+                                webEntryPoint
+                        )
+                )
+
                 .oauth2ResourceServer(oauth2 ->
                         oauth2
+                                .authenticationEntryPoint(
+                                        webEntryPoint
+                                )
                                 .bearerTokenResolver(
                                         bearerTokenResolver
                                 )
@@ -210,7 +272,8 @@ public class SecurityConfig {
                     request.getServletPath();
 
             if (REFRESH_ENDPOINT.equals(servletPath)
-                    || LOGOUT_ENDPOINT.equals(servletPath)) {
+                    || LOGOUT_ENDPOINT.equals(servletPath)
+                    || "/api/v1/auth/admin-logout".equals(servletPath)) {
 
                 return null;
             }
@@ -258,6 +321,11 @@ public class SecurityConfig {
 
         if (HttpMethod.GET.matches(method)) {
 
+            if ("/admin/login".equals(servletPath)
+                    || servletPath.startsWith("/admin/css/")) {
+                return true;
+            }
+
             if ("/api/v1/auth/csrf"
                     .equals(servletPath)
                     || "/api/v1/auth/password-reset/validate"
@@ -293,7 +361,9 @@ public class SecurityConfig {
 
         if (HttpMethod.POST.matches(method)) {
 
-            return "/api/v1/auth/register"
+            return "/admin/login"
+                    .equals(servletPath)
+                    || "/api/v1/auth/register"
                     .equals(servletPath)
                     || "/api/v1/auth/login"
                     .equals(servletPath)

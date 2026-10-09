@@ -165,6 +165,12 @@
 			<artifactId>spring-boot-restclient</artifactId>
 		</dependency>
 
+		<!-- Thymeleaf: HTML-шаблоны административной панели -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -16,6 +16,7 @@ import ru.putevodika.user.entity.UserAccount;
 import ru.putevodika.user.exception.LoginAlreadyUsedException;
 import ru.putevodika.user.exception.UnknownPreferenceCategoryException;
 import ru.putevodika.user.repository.UserRepository;
+import ru.putevodika.user.entity.UserRole;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -41,16 +42,42 @@ public class AuthService {
     public AuthSession login(
             LoginRequest request
     ) {
+        UserAccount user = authenticate(request);
+
+        String refreshToken =
+                refreshTokenService.issue(user);
+
+        return createSession(user, refreshToken);
+    }
+
+    @Transactional
+    public AuthSession loginAdmin(
+            LoginRequest request
+    ) {
+        UserAccount user = authenticate(request);
+
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new InvalidCredentialsException();
+        }
+
+        String refreshToken =
+                refreshTokenService.issue(user);
+
+        return createSession(user, refreshToken);
+    }
+
+    private UserAccount authenticate(
+            LoginRequest request
+    ) {
         String email = normalizeEmail(
                 request.getEmail()
         );
 
-        UserAccount user =
-                userRepository
-                        .findByEmailIgnoreCase(email)
-                        .orElseThrow(
-                                InvalidCredentialsException::new
-                        );
+        UserAccount user = userRepository
+                .findByEmailIgnoreCase(email)
+                .orElseThrow(
+                        InvalidCredentialsException::new
+                );
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
@@ -63,13 +90,7 @@ public class AuthService {
             throw new UserInactiveException();
         }
 
-        String refreshToken =
-                refreshTokenService.issue(user);
-
-        return createSession(
-                user,
-                refreshToken
-        );
+        return user;
     }
 
     @Transactional

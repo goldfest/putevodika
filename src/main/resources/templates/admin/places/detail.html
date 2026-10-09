@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Putevodika'">Объект | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-places.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <a class="places-link places-back" th:href="@{/admin/places}">← К списку</a>
+            <div class="places-heading-row">
+                <div class="page-heading">
+                    <h1 th:text="${place.name}">Название объекта</h1>
+                    <p>Объект № <span th:text="${place.id}"></span> · Источник: <span th:text="${place.sourceType}"></span></p>
+                </div>
+                <a class="places-button" th:href="@{/admin/places/{id}/edit(id=${place.id})}">Редактировать</a>
+            </div>
+            <div class="places-alert places-alert--success" th:if="${success}" th:text="${success}" role="status"></div>
+            <div class="places-alert places-alert--error" th:if="${error}" th:text="${error}" role="alert"></div>
+
+            <div class="places-detail-grid">
+                <div>
+                    <section class="places-panel places-info-panel">
+                        <h2>Основная информация</h2>
+                        <dl class="places-description-list">
+                            <div><dt>Название</dt><dd th:text="${place.name}"></dd></div>
+                            <div><dt>Описание</dt><dd class="places-break places-preline" th:text="${place.description ?: '—'}"></dd></div>
+                            <div><dt>Адрес</dt><dd th:text="${place.address ?: '—'}"></dd></div>
+                            <div><dt>Широта</dt><dd th:text="${place.latitude}"></dd></div>
+                            <div><dt>Долгота</dt><dd th:text="${place.longitude}"></dd></div>
+                            <div><dt>Продолжительность посещения</dt><dd th:text="${place.visitDurationMinutes == null ? '—' : place.visitDurationMinutes + ' мин'}"></dd></div>
+                            <div><dt>Часы работы</dt><dd th:text="${place.openingHours ?: '—'}"></dd></div>
+                            <div><dt>Телефон</dt><dd th:text="${place.phone ?: '—'}"></dd></div>
+                            <div><dt>Сайт</dt><dd class="places-break" th:text="${place.website ?: '—'}"></dd></div>
+                            <div><dt>Email</dt><dd class="places-break" th:text="${place.email ?: '—'}"></dd></div>
+                            <div><dt>Создан (UTC)</dt><dd th:text="${createdAt}"></dd></div>
+                            <div><dt>Изменён (UTC)</dt><dd th:text="${updatedAt}"></dd></div>
+                        </dl>
+                        <h3>Категории</h3>
+                        <div class="places-tags" th:if="${not #sets.isEmpty(place.categories)}">
+                            <span class="places-tag" th:each="category : ${place.categories}" th:text="${category}"></span>
+                        </div>
+                        <p class="places-muted" th:if="${#sets.isEmpty(place.categories)}">Не указаны</p>
+                    </section>
+
+                    <section class="places-panel places-info-panel">
+                        <h2>Характеристики features (0–5)</h2>
+                        <div class="places-tags" th:if="${not #maps.isEmpty(place.features)}">
+                            <span class="places-tag places-tag--gray" th:each="item : ${place.features.entrySet()}"
+                                  th:text="|${item.key}: ${item.value}|"></span>
+                        </div>
+                        <p class="places-muted" th:if="${#maps.isEmpty(place.features)}">Характеристики не заданы.</p>
+                    </section>
+                    <section class="places-panel places-info-panel">
+                        <h2>Оценки scores (0–1)</h2>
+                        <p class="places-muted">Эти оценки учитываются при подборе туристических объектов для маршрута.</p>
+                        <div class="places-score-grid">
+                            <div><span>Природа</span><strong th:text="${place.scores.nature}">0</strong></div>
+<div><span>Развлечения</span><strong th:text="${place.scores.attractions}">0</strong></div>
+<div><span>Военная тематика</span><strong th:text="${place.scores.military}">0</strong></div>
+<div><span>Религия</span><strong th:text="${place.scores.religion}">0</strong></div>
+<div><span>Архитектура</span><strong th:text="${place.scores.architecture}">0</strong></div>
+<div><span>История</span><strong th:text="${place.scores.history}">0</strong></div>
+<div><span>Искусство</span><strong th:text="${place.scores.art}">0</strong></div>
+<div><span>Сувениры</span><strong th:text="${place.scores.souvenirs}">0</strong></div>
+<div><span>Техника и транспорт</span><strong th:text="${place.scores.transportTech}">0</strong></div>
+<div><span>Проживание</span><strong th:text="${place.scores.accommodation}">0</strong></div>
+<div><span>Еда</span><strong th:text="${place.scores.food}">0</strong></div>
+<div><span>Особенная еда</span><strong th:text="${place.scores.exclusiveFood}">0</strong></div>
+<div><span>Субкультуры</span><strong th:text="${place.scores.subcultures}">0</strong></div>
+                        </div>
+                    </section>
+                </div>
+
+                <div>
+                    <section class="places-panel places-info-panel">
+                        <h2>Доступность</h2>
+                        <p><span class="places-pill" th:classappend="${place.active} ? ' places-pill--active' : ' places-pill--inactive'"
+                                 th:text="${place.active} ? 'Активен' : 'Отключён'"></span></p>
+                        <p><span class="places-pill" th:classappend="${place.availableForRoute} ? ' places-pill--active' : ' places-pill--inactive'"
+                                 th:text="${place.availableForRoute} ? 'Доступен для маршрутов' : 'Исключён из маршрутов'"></span></p>
+                        <p class="places-hint">Отключение объекта не удаляет данные. Для временного исключения только из маршрутов воспользуйтесь переключателем на странице редактирования.</p>
+                        <div class="places-separator"></div>
+                        <form th:if="${place.active}" method="post" th:action="@{/admin/places/{id}/deactivate(id=${place.id})}"
+                              onsubmit="return confirm('Отключить этот объект? Он останется в базе данных.');">
+                            <button type="submit" class="places-button places-button--danger">Отключить объект</button>
+                        </form>
+                        <form th:unless="${place.active}" method="post" th:action="@{/admin/places/{id}/activate(id=${place.id})}">
+                            <button type="submit" class="places-button">Восстановить объект</button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

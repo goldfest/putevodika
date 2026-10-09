@@ -1,0 +1,32 @@
+<header xmlns:th="http://www.thymeleaf.org"
+        th:fragment="header"
+        class="topbar">
+
+    <div class="topbar-title"
+         th:text="${pageTitle}">
+        Главная панель
+    </div>
+
+    <div class="topbar-user">
+
+        <span class="user-role">
+            ADMIN
+        </span>
+
+        <div class="user-avatar">
+            A
+        </div>
+
+        <form th:action="@{/api/v1/auth/admin-logout}"
+              method="post">
+
+            <button type="submit"
+                    class="logout-button">
+                Выйти
+            </button>
+
+        </form>
+
+    </div>
+
+</header>

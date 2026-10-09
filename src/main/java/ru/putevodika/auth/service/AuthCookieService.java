@@ -20,7 +20,9 @@ public class AuthCookieService {
     public static final String REFRESH_TOKEN_COOKIE =
             "refresh_token";
 
-    private static final String ACCESS_COOKIE_PATH = "/api";
+    private static final String ACCESS_COOKIE_PATH = "/";
+
+    private static final String LEGACY_ACCESS_COOKIE_PATH = "/api";
 
     private static final String REFRESH_COOKIE_PATH =
             "/api/v1/auth";
@@ -34,6 +36,12 @@ public class AuthCookieService {
             String accessToken,
             String refreshToken
     ) {
+        clearCookie(
+                response,
+                ACCESS_TOKEN_COOKIE,
+                LEGACY_ACCESS_COOKIE_PATH
+        );
+
         addCookie(
                 response,
                 ACCESS_TOKEN_COOKIE,
@@ -58,6 +66,12 @@ public class AuthCookieService {
                 response,
                 ACCESS_TOKEN_COOKIE,
                 ACCESS_COOKIE_PATH
+        );
+
+        clearCookie(
+                response,
+                ACCESS_TOKEN_COOKIE,
+                LEGACY_ACCESS_COOKIE_PATH
         );
 
         clearCookie(

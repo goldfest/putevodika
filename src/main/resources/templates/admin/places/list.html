@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Putevodika'">Объекты | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-places.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <div class="places-heading-row">
+                <div class="page-heading">
+                    <h1>Туристические объекты</h1>
+                    <p>Управление каталогом, категориями и пригодностью объектов для маршрутов.</p>
+                </div>
+                <a class="places-button" th:href="@{/admin/places/new}">+ Добавить объект</a>
+            </div>
+
+            <div class="places-alert places-alert--success" th:if="${success}" th:text="${success}" role="status"></div>
+            <div class="places-alert places-alert--error" th:if="${error}" th:text="${error}" role="alert"></div>
+
+            <section class="places-panel" aria-label="Каталог объектов">
+                <form class="places-filters" th:action="@{/admin/places}" method="get">
+                    <div class="places-field places-field--search">
+                        <label for="search">Поиск по названию</label>
+                        <input id="search" type="search" name="search" th:value="${search}" maxlength="100" placeholder="Например, музей">
+                    </div>
+                    <div class="places-field">
+                        <label for="category">Категория</label>
+                        <select id="category" name="category">
+                            <option value="">Все категории</option>
+                            <option th:each="category : ${categories}" th:value="${category.code}"
+                                    th:text="${category.name}" th:selected="${category.code == selectedCategory}"></option>
+                        </select>
+                    </div>
+                    <div class="places-field">
+                        <label for="sourceType">Источник</label>
+                        <select id="sourceType" name="sourceType">
+                            <option value="ALL" th:selected="${selectedSource == 'ALL'}">Любой</option>
+                            <option value="OSM" th:selected="${selectedSource == 'OSM'}">OSM</option>
+                            <option value="MANUAL" th:selected="${selectedSource == 'MANUAL'}">Ручной</option>
+                        </select>
+                    </div>
+                    <div class="places-field">
+                        <label for="active">Статус</label>
+                        <select id="active" name="active">
+                            <option value="ALL" th:selected="${selectedActive == 'ALL'}">Любой</option>
+                            <option value="true" th:selected="${selectedActive == 'true'}">Активен</option>
+                            <option value="false" th:selected="${selectedActive == 'false'}">Отключён</option>
+                        </select>
+                    </div>
+                    <div class="places-actions">
+                        <button type="submit" class="places-button">Найти</button>
+                        <a th:href="@{/admin/places}" class="places-button places-button--outline">Сбросить</a>
+                    </div>
+                </form>
+
+                <div class="places-results-meta">
+                    <span>Найдено объектов: <strong th:text="${totalElements}">0</strong></span>
+                    <span th:if="${totalPages > 0}" th:text="|Страница ${page + 1} из ${totalPages}|">Страница</span>
+                </div>
+
+                <div class="places-table-scroll">
+                    <table class="places-table">
+                        <thead>
+                        <tr><th>ID</th><th>Название / адрес</th><th>Источник</th><th>Статус</th><th>Координаты</th><th>Изменён (UTC)</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="place : ${places}">
+                            <td th:text="${place.id}">1</td>
+                            <td>
+                                <div class="places-name" th:text="${place.name}">Название</div>
+                                <span class="places-muted" th:text="${place.address != null and !place.address.isBlank() ? place.address : 'Адрес не задан'}"></span>
+                            </td>
+                            <td><span class="places-pill places-pill--source" th:text="${place.sourceType == 'OSM' ? 'OSM' : 'Ручной'}"></span></td>
+                            <td><span class="places-pill" th:classappend="${place.active} ? ' places-pill--active' : ' places-pill--inactive'"
+                                      th:text="${place.active} ? 'Активен' : 'Отключён'"></span></td>
+                            <td class="places-muted"><span th:text="${place.latitude}"></span>, <span th:text="${place.longitude}"></span></td>
+                            <td class="places-muted" th:text="${place.updatedAt}"></td>
+                            <td class="places-table-action"><a class="places-link" th:href="@{/admin/places/{id}(id=${place.id})}">Открыть →</a></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(places)}">
+                            <td colspan="7" class="places-empty">По этим условиям объекты не найдены.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <nav class="places-pagination" aria-label="Страницы" th:if="${totalPages > 1}">
+                    <a th:if="${page > 0}" class="places-page"
+                       th:href="@{/admin/places(page=${page - 1},search=${search},category=${selectedCategory},sourceType=${selectedSource},active=${selectedActive})}">←</a>
+                    <a th:each="index : ${pageNumbers}" class="places-page"
+                       th:classappend="${index == page} ? ' places-page--active' : ''"
+                       th:attr="aria-current=${index == page} ? 'page' : null"
+                       th:text="${index + 1}"
+                       th:href="@{/admin/places(page=${index},search=${search},category=${selectedCategory},sourceType=${selectedSource},active=${selectedActive})}">1</a>
+                    <a th:if="${page < totalPages - 1}" class="places-page"
+                       th:href="@{/admin/places(page=${page + 1},search=${search},category=${selectedCategory},sourceType=${selectedSource},active=${selectedActive})}">→</a>
+                </nav>
+            </section>
+        </main>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+/* Раздел туристических объектов. Цвета подтягиваются из admin.css (UI Kit Putevodika). */
+.places-heading-row {display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.places-heading-row .page-heading {flex:1;}
+.places-panel {background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:24px;min-width:0;}
+.places-filters {display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.places-field {display:flex;flex-direction:column;gap:8px;min-width:150px;flex:1;}
+.places-field--search {flex:2;min-width:220px;}
+.places-field--wide {grid-column:1 / -1;}
+.places-field label {font-size:13px;font-weight:600;color:var(--text);}
+.places-field input,.places-field select,.places-field textarea {border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font:inherit;font-size:14px;min-height:44px;padding:10px 13px;width:100%;}
+.places-field textarea {min-height:120px;resize:vertical;line-height:1.5;}
+.places-field input:focus-visible,.places-field select:focus-visible,.places-field textarea:focus-visible {outline:2px solid var(--primary);outline-offset:2px;}
+.places-actions,.places-form-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.places-button {display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:9px;background:var(--primary);padding:10px 18px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;font-family:inherit;}
+.places-button:hover {filter:brightness(.94);}
+.places-button:focus-visible {outline:3px solid var(--primary-dark);outline-offset:2px;}
+.places-button--outline {background:white;border-color:var(--border);}
+.places-button--danger {background:#fff0ee;border-color:#ffc3b9;color:#a92c20;}
+.places-results-meta {display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 12px;font-size:13px;color:var(--muted);}
+.places-results-meta strong {color:var(--text);}
+.places-table-scroll {overflow-x:auto;}
+.places-table {width:100%;border-collapse:collapse;min-width:790px;text-align:left;}
+.places-table th,.places-table td {padding:15px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.places-table thead th {text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-size:11px;}
+.places-table tbody tr:hover {background:#f8fafb;}
+.places-name {font-size:14px;font-weight:700;margin-bottom:5px;}
+.places-muted {color:var(--muted);font-size:13px;line-height:1.5;}
+.places-table-action {text-align:right;white-space:nowrap;}
+.places-link {font-size:13px;font-weight:700;color:#036c50;text-decoration:none;}
+.places-link:hover {text-decoration:underline;}
+.places-back {display:inline-block;margin-bottom:15px;}
+.places-pill {display:inline-flex;align-items:center;border-radius:30px;padding:7px 10px;font-size:12px;font-weight:700;white-space:nowrap;}
+.places-pill--source {background:#eaf0ff;color:#3d4a80;}
+.places-pill--active {background:#e3f8f0;color:#087653;}
+.places-pill--inactive {background:#ffefec;color:#a92c20;}
+.places-empty {padding:40px 14px !important;text-align:center;color:var(--muted);}
+.places-pagination {display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px;}
+.places-page {min-height:38px;min-width:38px;text-decoration:none;color:var(--text);font-size:13px;text-align:center;padding:10px;border:1px solid var(--border);border-radius:9px;}
+.places-page:hover {border-color:var(--primary);}
+.places-page--active {background:var(--primary);border-color:var(--primary);font-weight:700;}
+.places-detail-grid {display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:22px;align-items:start;}
+.places-info-panel h2 {margin:0 0 20px;font-size:18px;}
+.places-info-panel h3 {font-size:15px;margin:28px 0 12px;}
+.places-description-list {margin:0;}
+.places-description-list>div {display:grid;grid-template-columns:185px minmax(0,1fr);gap:10px;padding:13px 0;border-bottom:1px solid var(--border);}
+.places-description-list dt {color:var(--muted);font-size:13px;}
+.places-description-list dd {font-size:14px;margin:0;overflow-wrap:anywhere;}
+.places-break {overflow-wrap:anywhere;}.places-preline {white-space:pre-line;}
+.places-tags {display:flex;gap:8px;flex-wrap:wrap;}
+.places-tag {padding:8px 12px;border-radius:25px;background:#e3f8f0;color:#036c50;font-size:12px;font-weight:600;}
+.places-tag--gray {background:#eff1f5;color:var(--text);}
+.places-score-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 16px;}
+.places-score-grid>div {display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:12px 0;font-size:13px;}
+.places-score-grid strong {color:#036c50;}
+.places-hint {font-size:13px;color:var(--muted);line-height:1.6;}
+.places-separator {height:1px;background:var(--border);margin:22px 0;}
+.places-alert {margin-top:18px;border-radius:9px;padding:14px 16px;font-size:14px;}
+.places-alert--error {color:#a92c20;background:#ffefec;border:1px solid #ffc3b9;}
+.places-alert--success {color:#087653;background:#e3f8f0;border:1px solid #9ce4c8;}
+.places-alert ul {margin:8px 0 0;padding-left:18px;}
+.places-edit-form {display:block;max-width:1150px;}
+.places-edit-form .places-panel {margin-top:20px;}
+.places-form-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px;}
+.places-checkbox-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-height:350px;overflow-y:auto;padding:3px;}
+.places-option {display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:13px;}
+.places-option input {accent-color:var(--primary-dark);width:17px;height:17px;flex-shrink:0;}
+.places-option strong {display:block;font-size:13px;overflow-wrap:anywhere;}
+.places-option small {display:block;margin-top:5px;font-size:11px;color:var(--muted);overflow-wrap:anywhere;}
+.places-option--switch {max-width:500px;}
+.places-form-actions {margin:26px 0 34px;}
+@media(max-width:1100px) {.places-detail-grid {grid-template-columns:1fr;} .places-checkbox-grid {grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:700px) {.places-panel {padding:16px;} .places-field,.places-field--search {min-width:100%;} .places-form-grid,.places-score-grid,.places-checkbox-grid {grid-template-columns:1fr;} .places-description-list>div {grid-template-columns:1fr;gap:5px;} .places-actions {width:100%;} .places-actions .places-button {flex:1;} }

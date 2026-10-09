@@ -78,10 +78,17 @@ public class PlaceFileImportService {
                 );
             }
 
-            while (
-                    parser.nextToken()
-                            != JsonToken.END_ARRAY
-            ) {
+            JsonToken elementToken;
+
+            while ((elementToken = parser.nextToken())
+                    != JsonToken.END_ARRAY) {
+
+                if (elementToken == null) {
+                    throw new InvalidOsmImportFileException(
+                            "JSON-массив неожиданно закончился"
+                    );
+                }
+
                 total++;
 
                 OsmPlaceImportRequest request;

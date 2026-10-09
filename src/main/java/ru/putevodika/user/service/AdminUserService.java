@@ -33,118 +33,76 @@ import static ru.putevodika.user.repository.specification.UserSpecifications.has
 public class AdminUserService {
 
     private final UserRepository userRepository;
-
     private final RefreshTokenService refreshTokenService;
 
     public PageResponse<UserListItemResponse> findAll(
-            int page,
-            int size,
-            Boolean active,
-            UserRole role,
-            String search
+            int page, int size, Boolean active, UserRole role, String search
     ) {
-        Specification<UserAccount> specification =
-                Specification.allOf(
-                        hasActive(active),
-                        hasRole(role),
-                        containsSearch(search)
-                );
-
-        Pageable pageable =
-                PageRequest.of(
-                        page,
-                        size,
-                        Sort.by(
-                                Sort.Direction.DESC,
-                                "updatedAt"
-                        )
-                );
-
-        Page<UserListItemResponse> result =
-                userRepository
-                        .findAll(
-                                specification,
-                                pageable
-                        )
-                        .map(this::toListItemResponse);
-
+        Specification<UserAccount> specification = Specification.allOf(
+                hasActive(active), hasRole(role), containsSearch(search)
+        );
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.desc("id")));
+        Page<UserListItemResponse> result = userRepository
+                .findAll(specification, pageable)
+                .map(this::toListItemResponse);
         return PageResponse.from(result);
     }
 
     public UserResponse getById(Long id) {
-        return toResponse(
-                getUser(id)
-        );
+        return toResponse(getUser(id));
     }
 
     @Transactional
     public UserResponse changeRole(
-            Long administratorId,
-            Long userId,
-            ChangeUserRoleRequest request
+            Long administratorId, Long userId, ChangeUserRoleRequest request
     ) {
-        validateNotSelf(
-                administratorId,
-                userId
-        );
-
+        validateNotSelf(administratorId, userId);
         UserAccount user = getUser(userId);
-
-        user.changeRole(
-                request.getRole()
-        );
-
+        if (request.getRole() == null) {
+            throw new IllegalArgumentException("Не указана роль пользователя");
+        }
+        if (user.getRole() != request.getRole()) {
+            user.changeRole(request.getRole());
+            user.incrementAuthVersion();
+            refreshTokenService.revokeAllForUser(userId);
+        }
         return toResponse(user);
     }
 
     @Transactional
-    public void deactivate(
-            Long administratorId,
-            Long userId
-    ) {
-        validateNotSelf(
-                administratorId,
-                userId
-        );
-
+    public void deactivate(Long administratorId, Long userId) {
+        validateNotSelf(administratorId, userId);
         UserAccount user = getUser(userId);
-
-        user.deactivate();
-
-        refreshTokenService.revokeAllForUser(
-                userId
-        );
+        if (user.isActive()) {
+            user.deactivate();
+            user.incrementAuthVersion();
+            refreshTokenService.revokeAllForUser(userId);
+        }
     }
 
     @Transactional
     public UserResponse activate(Long userId) {
         UserAccount user = getUser(userId);
-
-        user.activate();
-
+        if (!user.isActive()) {
+            user.activate();
+            user.incrementAuthVersion();
+        }
         return toResponse(user);
     }
 
     private UserAccount getUser(Long id) {
-        return userRepository
-                .findById(id)
-                .orElseThrow(
-                        () -> new UserNotFoundException(id)
-                );
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    private void validateNotSelf(
-            Long administratorId,
-            Long targetUserId
-    ) {
+    private void validateNotSelf(Long administratorId, Long targetUserId) {
         if (administratorId.equals(targetUserId)) {
             throw new SelfAdministrationException();
         }
     }
 
-    private UserListItemResponse toListItemResponse(
-            UserAccount user
-    ) {
+    private UserListItemResponse toListItemResponse(UserAccount user) {
         return UserListItemResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -157,15 +115,10 @@ public class AdminUserService {
                 .build();
     }
 
-    private UserResponse toResponse(
-            UserAccount user
-    ) {
-        Set<String> preferredCategories =
-                user.getPreferredCategories()
-                        .stream()
-                        .map(Category::getCode)
-                        .collect(Collectors.toSet());
-
+    private UserResponse toResponse(UserAccount user) {
+        Set<String> categories = user.getPreferredCategories().stream()
+                .map(Category::getCode)
+                .collect(Collectors.toSet());
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -173,9 +126,9 @@ public class AdminUserService {
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .active(user.isActive())
-                .preferredCategories(
-                        preferredCategories
-                )
+                .preferredCategories(categories)
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .onboardingCompletedAt(user.getOnboardingCompletedAt())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

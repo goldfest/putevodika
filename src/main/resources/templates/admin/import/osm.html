@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Putevodika'">Импорт OSM | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-import.css}">
+    <script th:src="@{/admin/js/admin-import.js}" defer></script>
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <div class="page-heading">
+                <h1>Импорт подготовленных OSM-объектов</h1>
+                <p>Загрузите JSON-массив объектов, прошедших предварительную обработку. Импорт выполняется в текущем запросе.</p>
+            </div>
+
+            <div th:if="${error}" class="import-alert import-alert--error" role="alert" th:text="${error}"></div>
+
+            <section class="import-grid">
+                <div class="import-panel">
+                    <h2>Загрузка файла</h2>
+                    <form id="importForm" th:action="@{/admin/import/osm}"
+                          method="post" enctype="multipart/form-data">
+                        <label class="import-file-label" for="osmFile">JSON-файл объектов</label>
+                        <input id="osmFile" name="file" class="import-file-input"
+                               type="file" accept=".json,application/json" required>
+                        <div id="chosenFile" class="import-muted" aria-live="polite">Файл не выбран</div>
+                        <label class="import-confirm">
+                            <input type="checkbox" id="confirmOverwrite" required>
+                            <span>Я понимаю, что уже импортированные OSM-объекты с теми же ID могут быть обновлены, а частично завершённый импорт не откатывается автоматически.</span>
+                        </label>
+                        <button id="importButton" type="submit" class="import-button">Начать импорт</button>
+                        <div id="importProgress" class="import-progress" hidden role="status" aria-live="polite">
+                            <span class="import-spinner" aria-hidden="true"></span>
+                            Файл отправлен. Импорт выполняется, не закрывайте страницу.
+                        </div>
+                    </form>
+                    <p class="import-muted">Максимальный размер по умолчанию — 100 МБ для файла и 110 МБ для запроса. Фактические лимиты определяются настройками сервера и прокси.</p>
+                </div>
+
+                <aside class="import-panel import-panel--tips">
+                    <h2>Требования к формату</h2>
+                    <ul class="import-info-list">
+                        <li>Только <strong>.json</strong> с массивом в корне: <code>[{…}, {…}]</code>. ZIP не поддерживается.</li>
+                        <li>Каждый элемент должен иметь <code>id</code>, <code>osm</code>, <code>name</code>, <code>categories</code>, <code>location</code>, <code>scores</code>.</li>
+                        <li>OSM ID имеет вид <code>osm:node:12345</code> (также <code>way</code> и <code>relation</code>).</li>
+                        <li>Категории должны существовать и быть активными в базе.</li>
+                        <li>Все 13 полей <code>scores</code> обязательны, значения — от 0 до 1.</li>
+                        <li>Повторный импорт того же OSM ID <strong>обновляет существующий объект</strong>, а не создаёт дубликат.</li>
+                    </ul>
+                    <p class="import-muted">Это импорт подготовленных данных, а не загрузка сырого файла OpenStreetMap (.osm/.pbf). Пример JSON находится в комплекте исходников.</p>
+                    <a class="import-inline-link" th:href="@{/admin/places}">Перейти к каталогу объектов →</a>
+                </aside>
+            </section>
+
+            <section th:if="${report != null}" class="import-results" aria-labelledby="importReportHeading">
+                <div class="import-results-heading">
+                    <div>
+                        <h2 id="importReportHeading">Результат обработки</h2>
+                        <p class="import-muted" th:if="${fileName != null}">Файл: <strong th:text="${fileName}">osm.json</strong></p>
+                    </div>
+                    <a class="import-button import-button--outline" th:href="@{/admin/import/osm}">Загрузить другой файл</a>
+                </div>
+
+                <div class="import-stats">
+                    <div class="import-stat"><span>Всего</span><strong th:text="${report.total}">0</strong></div>
+                    <div class="import-stat import-stat--good"><span>Создано</span><strong th:text="${report.created}">0</strong></div>
+                    <div class="import-stat import-stat--good"><span>Обновлено</span><strong th:text="${report.updated}">0</strong></div>
+                    <div class="import-stat import-stat--bad"><span>Ошибок</span><strong th:text="${report.failed}">0</strong></div>
+                </div>
+
+                <div class="import-alert import-alert--success" th:if="${report.failed == 0}">
+                    Обработка завершена без ошибок отдельных объектов.
+                </div>
+                <div class="import-alert import-alert--warning" th:if="${report.failed > 0}">
+                    Импорт завершён частично: некоторые объекты были отклонены. Успешно обработанные записи уже сохранены.
+                </div>
+                <div class="import-alert import-alert--warning">
+                    Результат показан только для этой загрузки. Если обновить страницу, браузер может повторно отправить файл. История импортов пока не сохраняется.
+                </div>
+
+                <div class="import-panel" th:if="${report.failed > 0}">
+                    <h3>Ошибки объектов</h3>
+                    <p class="import-muted">Показаны первые 200 ошибок. Текст ошибок выводится как обычный текст, не как HTML.</p>
+                    <div class="import-table-wrap">
+                        <table class="import-errors-table">
+                            <thead><tr><th>OSM ID / номер</th><th>Причина</th></tr></thead>
+                            <tbody>
+                            <tr th:each="failure : ${visibleFailures}">
+                                <td th:text="${failure.id}">#1</td>
+                                <td th:text="${failure.error}">Ошибка</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="import-muted" th:if="${moreFailures > 0}"
+                       th:text="|Не показано ещё ошибок: ${moreFailures}.|">Ещё ошибки</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пользователи | Putevodika</title>
+    <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/admin/css/admin-users.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+    <div class="main-wrapper">
+        <div th:replace="~{admin/fragments/header :: header}"></div>
+        <main class="main-content">
+            <div class="page-heading">
+                <h1>Пользователи</h1>
+                <p>Управление учётными записями и правами доступа</p>
+            </div>
+
+            <div th:if="${success}" class="users-alert users-alert--success"
+                 role="status" th:text="${success}"></div>
+            <div th:if="${error}" class="users-alert users-alert--error"
+                 role="alert" th:text="${error}"></div>
+
+            <section class="users-panel" aria-label="Список пользователей">
+                <form method="get" th:action="@{/admin/users}" class="users-filters">
+                    <div class="users-field users-field--search">
+                        <label for="search">Поиск</label>
+                        <input id="search" type="search" name="search" maxlength="100"
+                               th:value="${search}" placeholder="Email или имя пользователя">
+                    </div>
+                    <div class="users-field">
+                        <label for="role">Роль</label>
+                        <select name="role" id="role">
+                            <option value="ALL" th:selected="${selectedRole == 'ALL'}">Все роли</option>
+                            <option value="USER" th:selected="${selectedRole == 'USER'}">USER</option>
+                            <option value="ADMIN" th:selected="${selectedRole == 'ADMIN'}">ADMIN</option>
+                        </select>
+                    </div>
+                    <div class="users-field">
+                        <label for="active">Статус</label>
+                        <select name="active" id="active">
+                            <option value="ALL" th:selected="${selectedActive == 'ALL'}">Любой</option>
+                            <option value="true" th:selected="${selectedActive == 'true'}">Активен</option>
+                            <option value="false" th:selected="${selectedActive == 'false'}">Заблокирован</option>
+                        </select>
+                    </div>
+                    <div class="users-actions">
+                        <button class="users-button" type="submit">Найти</button>
+                        <a class="users-button users-button--light" th:href="@{/admin/users}">Сбросить</a>
+                    </div>
+                </form>
+
+                <div class="users-results-meta">
+                    <span>Найдено пользователей: <strong th:text="${totalElements}">0</strong></span>
+                    <span th:if="${totalPages > 0}"
+                          th:text="|Страница ${page + 1} из ${totalPages}|">Страница 1 из 1</span>
+                </div>
+
+                <div class="users-table-scroll">
+                    <table class="users-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Пользователь</th>
+                            <th>Роль</th>
+                            <th>Статус</th>
+                            <th>Дата регистрации (UTC)</th>
+                            <th><span class="users-visually-hidden">Действия</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="user : ${users}">
+                            <td class="users-muted" th:text="${user.id}">1</td>
+                            <td>
+                                <div class="users-name" th:text="${user.displayName}">Имя</div>
+                                <div class="users-muted users-email" th:text="${user.email}">email@example.com</div>
+                            </td>
+                            <td><span class="users-badge users-badge--role" th:text="${user.role}">USER</span></td>
+                            <td>
+                                <span class="users-badge"
+                                      th:classappend="${user.active} ? ' users-badge--active' : ' users-badge--blocked'"
+                                      th:text="${user.active} ? 'Активен' : 'Заблокирован'">Активен</span>
+                            </td>
+                            <td class="users-muted" th:text="${user.createdAt}">—</td>
+                            <td class="users-table-action">
+                                <a th:href="@{/admin/users/{id}(id=${user.id})}"
+                                   class="users-link">Открыть →</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="6" class="users-empty">По заданным фильтрам пользователи не найдены.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav class="users-pagination" aria-label="Страницы списка" th:if="${totalPages > 1}">
+                    <a class="users-page"
+                       th:if="${page > 0}"
+                       th:href="@{/admin/users(page=${page - 1}, search=${search}, role=${selectedRole}, active=${selectedActive})}">← Назад</a>
+                    <a class="users-page" th:each="number : ${pageNumbers}"
+                       th:classappend="${number == page} ? ' users-page--active' : ''"
+                       th:attr="aria-current=${number == page ? 'page' : null}"
+                       th:href="@{/admin/users(page=${number}, search=${search}, role=${selectedRole}, active=${selectedActive})}"
+                       th:text="${number + 1}">1</a>
+                    <a class="users-page"
+                       th:if="${page + 1 < totalPages}"
+                       th:href="@{/admin/users(page=${page + 1}, search=${search}, role=${selectedRole}, active=${selectedActive})}">Вперёд →</a>
+                </nav>
+            </section>
+        </main>
+    </div>
+</div>
+</body>
+</html>

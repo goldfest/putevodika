@@ -1,0 +1,45 @@
+.import-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr);gap:22px;margin-top:30px;align-items:start}
+.import-panel{background:var(--surface,#fff);border:1px solid var(--border,#E9EAEF);border-radius:14px;padding:26px;min-width:0}
+.import-panel h2,.import-results h2{margin:0 0 18px;font-size:20px;color:var(--text,#1D1E33)}
+.import-panel h3{font-size:17px;margin:0 0 8px;color:var(--text,#1D1E33)}
+.import-file-label{display:block;font-size:14px;font-weight:700;margin-bottom:10px}
+.import-file-input{display:block;width:100%;max-width:100%;padding:16px;border:2px dashed #9fdbc9;border-radius:12px;background:#f6fffb;color:var(--text,#1D1E33);font:inherit;font-size:13px}
+.import-file-input:focus-visible,.import-button:focus-visible,.import-confirm input:focus-visible{outline:3px solid #1CD3A2;outline-offset:3px}
+.import-file-input::file-selector-button{background:#1CD3A2;border:0;border-radius:8px;color:#1D1E33;padding:10px 15px;margin-right:12px;font-weight:700;cursor:pointer}
+.import-muted{color:var(--muted,#777887);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.import-confirm{display:flex;align-items:flex-start;gap:12px;margin:20px 0;padding:14px;background:#f8fafb;border:1px solid #e4e9ec;border-radius:10px;font-size:13px;line-height:1.55;cursor:pointer}
+.import-confirm input{width:18px;height:18px;flex-shrink:0;accent-color:#129F79}
+.import-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #1CD3A2;border-radius:9px;background:#1CD3A2;color:#1D1E33;font:inherit;font-size:14px;font-weight:700;padding:10px 20px;cursor:pointer;text-decoration:none;transition:background .15s}
+.import-button:hover{background:#12b98b;border-color:#12b98b}
+.import-button:disabled{opacity:.6;cursor:wait}
+.import-button--outline{background:#fff;border-color:#cbd6d2}
+.import-button--outline:hover{background:#f5fbf8}
+.import-info-list{margin:0 0 20px;padding-left:20px;color:#3d4655;font-size:14px;line-height:1.6}
+.import-info-list li{margin-bottom:10px;overflow-wrap:anywhere}
+.import-info-list code{background:#eff2f2;border-radius:4px;padding:2px 4px;font-size:12px}
+.import-inline-link{color:#036C50;font-weight:700;font-size:14px;text-decoration:underline}
+.import-results{margin-top:30px}
+.import-results-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin:0 0 18px}
+.import-results-heading h2{margin:0}
+.import-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:16px 0 20px}
+.import-stat{background:#fff;border:1px solid #e4e8ef;padding:20px;border-radius:12px;display:flex;flex-direction:column;gap:12px}
+.import-stat span{font-size:13px;color:#697185}
+.import-stat strong{font-size:30px;color:#1D1E33}
+.import-stat--good{border-left:4px solid #1CD3A2}
+.import-stat--bad{border-left:4px solid #E85252}
+.import-alert{padding:14px 16px;margin:0 0 14px;border-radius:9px;font-size:14px;line-height:1.5}
+.import-alert--error{background:#fff1f1;border:1px solid #edb9b9;color:#922c2c;margin-top:18px}
+.import-alert--warning{background:#fff9e8;border:1px solid #ecd89c;color:#66531d}
+.import-alert--success{background:#e8fbf4;border:1px solid #96e1c5;color:#065b42}
+.import-errors-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.import-errors-table th,.import-errors-table td{padding:13px;border-bottom:1px solid #e9eaef;vertical-align:top;overflow-wrap:anywhere}
+.import-errors-table th{background:#f7f9fa;white-space:nowrap}
+.import-errors-table td:first-child{font-weight:700;min-width:145px}
+.import-table-wrap{width:100%;overflow-x:auto;margin-top:14px}
+.import-progress{display:flex;align-items:center;gap:11px;margin-top:17px;color:#036C50;font-size:13px}
+.import-progress[hidden]{display:none}
+.import-spinner{display:inline-block;width:18px;height:18px;border:3px solid #b9efdc;border-top-color:#036C50;border-radius:50%;animation:importSpin 1s linear infinite}
+@keyframes importSpin{to{transform:rotate(360deg)}}
+@media(max-width:1000px){.import-grid{grid-template-columns:1fr}.import-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.import-panel{padding:18px}.import-stats{gap:9px}.import-stat{padding:15px}.import-stat strong{font-size:25px}.import-results-heading .import-button{width:100%}}
+@media(prefers-reduced-motion:reduce){.import-spinner{animation:none}}
